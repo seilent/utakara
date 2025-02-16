@@ -22,7 +22,7 @@ It's not an automatic process, more like manual entry database.
 
 ## Installation
 
-### Method 1: Using Docker
+### Method 1: Using Docker (still broken)
 
 1. Clone the repository:
 ```bash
@@ -71,18 +71,18 @@ You can generate a secure NEXTAUTH_SECRET by:
 - Using the [NextAuth Secret Generator](https://auth-secret-gen.vercel.app/)
 - Or running this command: `node -e "console.log(crypto.randomBytes(32).toString('hex'))"`
 
-4. Set up the database:
-```bash
-npm run migrate
-```
-
-5. Build and start the application:
+4. Build and start the application:
 ```bash
 npm run build
 npm start
 ```
 
-6. Open [http://localhost:4000](http://localhost:4000) in your browser
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+
+## Admin Interface
+
+The admin interface is accessible at `/admin` after logging in to add songs. 
 
 ## Default Credentials
 The default login credentials are:
@@ -90,6 +90,10 @@ The default login credentials are:
 - Password: admin
 
 It is highly recommended to change these credentials after your first login.
+
+To access the admin interface:
+1. Navigate to `/admin` or click the admin link in the navigation
+2. Log in with your credentials
 
 ### Changing Admin Credentials
 1. Log in to the application using your current credentials
@@ -108,33 +112,4 @@ Run the development server:
 npm run dev
 ```
 
-The app will run on [http://localhost:4000](http://localhost:4000) with hot-reload enabled.
-
-## Features
-
-- Japanese song management with furigana support
-- Admin interface for song management
-- Interactive particle background
-- Search functionality
-- Mobile-responsive design
-
-## Technologies
-
-- Next.js 15
-- TypeScript
-- SQLite (better-sqlite3)
-- TailwindCSS
-- Framer Motion
-- Next Auth for authentication
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Learn Next.js](https://nextjs.org/learn)
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The app will run on [http://localhost:3000](http://localhost:3000) with hot-reload enabled.

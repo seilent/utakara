@@ -3,8 +3,6 @@
 import { useState, useRef, ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from 'next/navigation';
-import ReactCrop, { type Crop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
 
 interface FormData {
   titleJapanese: string;
@@ -21,14 +19,6 @@ export default function AdminPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const [crop, setCrop] = useState<Crop>({
-    unit: '%',
-    x: 0,
-    y: 0,
-    width: 100,
-    height: 100
-  });
   const [formData, setFormData] = useState<FormData>({
     titleJapanese: "",
     titleEnglish: "",
@@ -57,14 +47,6 @@ export default function AdminPage() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setSelectedImage(event.target?.result as string);
-        // Reset crop when new image is selected
-        setCrop({
-          unit: '%',
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100
-        });
       };
       reader.readAsDataURL(file);
     }
@@ -72,41 +54,6 @@ export default function AdminPage() {
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const getCroppedImg = async (image: HTMLImageElement, crop: Crop): Promise<Blob> => {
-    const canvas = document.createElement('canvas');
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-    canvas.width = crop.width;
-    canvas.height = crop.height;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) {
-      throw new Error('No 2d context');
-    }
-
-    ctx.drawImage(
-      image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      crop.width,
-      crop.height
-    );
-
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(blob => {
-        if (!blob) {
-          reject(new Error('Canvas is empty'));
-          return;
-        }
-        resolve(blob);
-      }, 'image/jpeg', 0.95);
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,34 +68,29 @@ export default function AdminPage() {
         throw new Error('All fields are required');
       }
 
-      // Get cropped image
-      if (!imgRef.current) {
-        throw new Error('No image selected');
-      }
-
-      const croppedBlob = await getCroppedImg(imgRef.current, crop);
-      const croppedFile = new File([croppedBlob], fileInputRef.current?.files?.[0]?.name || 'artwork.jpg', {
-        type: 'image/jpeg'
-      });
-
       const formDataToSend = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
         formDataToSend.append(key, value);
       });
-      formDataToSend.append('artwork', croppedFile);
+      
+      // Add the original file directly without cropping
+      const file = fileInputRef.current?.files?.[0];
+      if (file) {
+        formDataToSend.append('artwork', file);
+      }
 
       const response = await fetch('/api/songs', {
         method: 'POST',
         body: formDataToSend,
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || 'Failed to save song');
       }
 
-      const { songId } = await response.json();
-      router.push(`/songs/${songId}`);
+      router.push(`/songs/${data.songId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
@@ -222,20 +164,12 @@ export default function AdminPage() {
           <div className="flex flex-col items-center gap-4">
             {selectedImage ? (
               <div className="w-full max-w-md">
-                <ReactCrop
-                  crop={crop}
-                  onChange={c => setCrop(c)}
-                  aspect={1}
-                  circularCrop={false}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    ref={imgRef}
-                    src={selectedImage}
-                    alt="Selected artwork"
-                    className="max-w-full h-auto"
-                  />
-                </ReactCrop>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={selectedImage}
+                  alt="Selected artwork"
+                  className="max-w-full h-auto"
+                />
                 <button
                   type="button"
                   onClick={() => setSelectedImage(null)}

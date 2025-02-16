@@ -30,14 +30,6 @@ export default function EditSongPage({ params }: PageProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const [crop, setCrop] = useState<Crop>({
-    unit: '%',
-    x: 0,
-    y: 0,
-    width: 100,
-    height: 100
-  });
   const [formData, setFormData] = useState<FormData>({
     titleJapanese: "",
     titleEnglish: "",
@@ -85,13 +77,6 @@ export default function EditSongPage({ params }: PageProps) {
       const reader = new FileReader();
       reader.onload = (event) => {
         setSelectedImage(event.target?.result as string);
-        setCrop({
-          unit: '%',
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100
-        });
       };
       reader.readAsDataURL(file);
     }
@@ -99,41 +84,6 @@ export default function EditSongPage({ params }: PageProps) {
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const getCroppedImg = async (image: HTMLImageElement, crop: Crop): Promise<Blob> => {
-    const canvas = document.createElement('canvas');
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-    canvas.width = crop.width;
-    canvas.height = crop.height;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) {
-      throw new Error('No 2d context');
-    }
-
-    ctx.drawImage(
-      image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      crop.width,
-      crop.height
-    );
-
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(blob => {
-        if (!blob) {
-          reject(new Error('Canvas is empty'));
-          return;
-        }
-        resolve(blob);
-      }, 'image/jpeg', 0.95);
-    });
   };
 
   const handleDelete = async () => {
@@ -176,14 +126,12 @@ export default function EditSongPage({ params }: PageProps) {
         formDataToSend.append(key, value);
       });
 
-      // Only process new image if one was selected
-      if (selectedImage && imgRef.current) {
-        const croppedBlob = await getCroppedImg(imgRef.current, crop);
-        const croppedFile = new File([croppedBlob], fileInputRef.current?.files?.[0]?.name || 'artwork.jpg', {
-          type: 'image/jpeg'
-        });
-        formDataToSend.append('artwork', croppedFile);
-        formDataToSend.append('cropData', JSON.stringify(crop));
+      // Only add new artwork if one was selected
+      if (selectedImage) {
+        const file = fileInputRef.current?.files?.[0];
+        if (file) {
+          formDataToSend.append('artwork', file);
+        }
       }
 
       const response = await fetch('/api/songs', {
@@ -280,20 +228,12 @@ export default function EditSongPage({ params }: PageProps) {
           <div className="flex flex-col items-center gap-4">
             {selectedImage || existingImage ? (
               <div className="w-full max-w-md">
-                <ReactCrop
-                  crop={crop}
-                  onChange={c => setCrop(c)}
-                  aspect={1}
-                  circularCrop={false}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    ref={imgRef}
-                    src={selectedImage || existingImage || ''}
-                    alt="Selected artwork"
-                    className="max-w-full h-auto"
-                  />
-                </ReactCrop>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={selectedImage || existingImage || ''}
+                  alt="Selected artwork"
+                  className="max-w-full h-auto"
+                />
                 <button
                   type="button"
                   onClick={handleUploadClick}

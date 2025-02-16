@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     // Save the artwork file with romaji name
     const buffer = Buffer.from(await artwork.arrayBuffer());
-    const artworkExt = artwork.name.split('.').pop();
+    const artworkExt = artwork.name.split('.').pop() || 'jpg';
     const safeRomaji = romaji.split('\n')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
     const artworkFilename = `${safeRomaji}.${artworkExt}`;
     const artworkPath = path.join(process.cwd(), 'public', 'uploads', artworkFilename);
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     await fs.writeFile(artworkPath, buffer);
 
     // Insert into database
-    const id = insertSong({
+    const id = await insertSong({
       title_japanese: titleJapanese,
       title_english: titleEnglish,
       artist_japanese: artistJapanese,
@@ -127,7 +127,7 @@ export async function PUT(request: Request) {
     if (artwork) {
       // Save the new artwork file
       const buffer = Buffer.from(await artwork.arrayBuffer());
-      const artworkExt = artwork.name.split('.').pop();
+      const artworkExt = artwork.name.split('.').pop() || 'jpg';
       const safeRomaji = romaji.split('\n')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
       const artworkFilename = `${safeRomaji}.${artworkExt}`;
       artworkPath = `/uploads/${artworkFilename}`;

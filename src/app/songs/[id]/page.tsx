@@ -118,10 +118,10 @@ export default function SongPage({ params }: PageProps) {
                 src={song.artwork}
                 alt={`${song.title.japanese} - ${song.artist.japanese}`}
                 fill
-                quality={100}
                 priority
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 33vw"
+                unoptimized
               />
             </motion.div>
             <div className="mt-6">
