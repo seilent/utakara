@@ -70,6 +70,31 @@ export async function getSongById(id: number): Promise<Song | null> {
   }
 }
 
+export async function getSongByRomaji(romaji: string): Promise<Song | null> {
+  try {
+    return new Promise((resolve, reject) => {
+      try {
+        // Get all songs with matching first line of romaji lyrics
+        const songs = db.prepare(`
+          SELECT * FROM songs 
+          WHERE lyrics_romaji LIKE ? || '%'
+          ORDER BY created_at ASC
+        `).all(romaji) as DbSong[];
+        
+        if (songs.length === 0) return resolve(null);
+        
+        // Return the first matching song
+        resolve(formatSongFromDb(songs[0]));
+      } catch (error) {
+        reject(error);
+      }
+    });
+  } catch (error) {
+    console.error('Error getting song by romaji:', error);
+    throw error;
+  }
+}
+
 export async function insertSong(song: {
   title_japanese: string;
   title_english: string;
