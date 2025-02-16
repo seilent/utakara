@@ -200,10 +200,14 @@ export default function SongGrid({ songs }: Props) {
                 src={song.artwork}
                 alt={song.title.japanese}
                 fill
-                className="object-cover transition-transform group-hover:scale-110"
+                quality={100}
+                unoptimized
+                className="object-cover transition-all duration-300 group-hover:brightness-[0.5] group-hover:contrast-100 group-hover:saturate-50 group-hover:scale-110"
                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                priority={i < 8}
+                draggable={false}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4 backdrop-blur-[2px]">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                 <div className="w-full">
                   <h2 className="text-white/95 font-bold leading-tight break-all text-shadow-lg drop-shadow-lg">
                     {song.title.japanese}

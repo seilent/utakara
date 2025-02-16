@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, ChangeEvent, useEffect } from "react";
+import { use } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
@@ -17,12 +18,13 @@ interface FormData {
 }
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function EditSongPage({ params }: PageProps) {
+  const { id } = use(params);
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,7 +51,7 @@ export default function EditSongPage({ params }: PageProps) {
 
   useEffect(() => {
     // Fetch existing song data
-    fetch(`/api/songs/get?id=${params.id}`)
+    fetch(`/api/songs/get?id=${id}`)
       .then(res => res.json())
       .then(data => {
         setFormData({
@@ -63,7 +65,7 @@ export default function EditSongPage({ params }: PageProps) {
         setExistingImage(data.artwork);
       })
       .catch(err => setError(err.message));
-  }, [params.id]);
+  }, [id]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setError(null);
@@ -142,7 +144,7 @@ export default function EditSongPage({ params }: PageProps) {
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/songs?id=${params.id}`, {
+      const response = await fetch(`/api/songs?id=${id}`, {
         method: 'DELETE'
       });
 
@@ -170,7 +172,7 @@ export default function EditSongPage({ params }: PageProps) {
       }
 
       const formDataToSend = new FormData();
-      formDataToSend.append('id', params.id);
+      formDataToSend.append('id', id);
       Object.entries(formData).forEach(([key, value]) => {
         formDataToSend.append(key, value);
       });
@@ -182,6 +184,7 @@ export default function EditSongPage({ params }: PageProps) {
           type: 'image/jpeg'
         });
         formDataToSend.append('artwork', croppedFile);
+        formDataToSend.append('cropData', JSON.stringify(crop));
       }
 
       const response = await fetch('/api/songs', {
@@ -194,7 +197,7 @@ export default function EditSongPage({ params }: PageProps) {
         throw new Error(data.error || 'Failed to update song');
       }
 
-      router.push(`/songs/${params.id}`);
+      router.push(`/songs/${id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {

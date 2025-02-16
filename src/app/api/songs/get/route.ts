@@ -7,14 +7,14 @@ export async function GET(request: Request) {
     const id = searchParams.get('id');
 
     if (id) {
-      const song = getSongById(parseInt(id));
+      const song = await getSongById(parseInt(id));
       if (!song) {
         return NextResponse.json({ error: 'Song not found' }, { status: 404 });
       }
       return NextResponse.json(song);
     }
 
-    const songs = getAllSongs();
+    const songs = await getAllSongs();
     return NextResponse.json(songs);
   } catch (error) {
     console.error('Error fetching songs:', error);

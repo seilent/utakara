@@ -29,28 +29,39 @@ try {
   throw error;
 }
 
-// Rest of the functions now wrapped in try-catch
-export function getAllSongs() {
+export async function getAllSongs() {
   try {
-    const songs = db.prepare('SELECT * FROM songs ORDER BY created_at DESC').all();
-    return songs.map(formatSongFromDb);
+    return new Promise((resolve, reject) => {
+      try {
+        const songs = db.prepare('SELECT * FROM songs ORDER BY created_at DESC').all();
+        resolve(songs.map(formatSongFromDb));
+      } catch (error) {
+        reject(error);
+      }
+    });
   } catch (error) {
     console.error('Error getting all songs:', error);
     throw error;
   }
 }
 
-export function getSongById(id: number) {
+export async function getSongById(id: number) {
   try {
-    const song = db.prepare('SELECT * FROM songs WHERE id = ?').get(id);
-    return song ? formatSongFromDb(song) : null;
+    return new Promise((resolve, reject) => {
+      try {
+        const song = db.prepare('SELECT * FROM songs WHERE id = ?').get(id);
+        resolve(song ? formatSongFromDb(song) : null);
+      } catch (error) {
+        reject(error);
+      }
+    });
   } catch (error) {
     console.error('Error getting song by id:', error);
     throw error;
   }
 }
 
-export function insertSong(song: {
+export async function insertSong(song: {
   title_japanese: string;
   title_english: string;
   artist_japanese: string;
@@ -60,25 +71,31 @@ export function insertSong(song: {
   lyrics_romaji: string;
 }) {
   try {
-    const stmt = db.prepare(`
-      INSERT INTO songs (
-        title_japanese, title_english,
-        artist_japanese, artist_english,
-        artwork, lyrics_japanese, lyrics_romaji
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
+    return new Promise((resolve, reject) => {
+      try {
+        const stmt = db.prepare(`
+          INSERT INTO songs (
+            title_japanese, title_english,
+            artist_japanese, artist_english,
+            artwork, lyrics_japanese, lyrics_romaji
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
 
-    const result = stmt.run(
-      song.title_japanese,
-      song.title_english,
-      song.artist_japanese,
-      song.artist_english,
-      song.artwork,
-      song.lyrics_japanese,
-      song.lyrics_romaji
-    );
+        const result = stmt.run(
+          song.title_japanese,
+          song.title_english,
+          song.artist_japanese,
+          song.artist_english,
+          song.artwork,
+          song.lyrics_japanese,
+          song.lyrics_romaji
+        );
 
-    return result.lastInsertRowid;
+        resolve(result.lastInsertRowid);
+      } catch (error) {
+        reject(error);
+      }
+    });
   } catch (error) {
     console.error('Error inserting song:', error);
     throw error;
