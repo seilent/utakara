@@ -1,33 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Utakara
 
-## Getting Started
+A Next.js application for managing Japanese songs.
 
-First, run the development server:
+## Prerequisites
+
+- Node.js 18 or later
+- Docker (optional)
+
+## Installation
+
+### Method 1: Using Docker
+
+1. Clone the repository:
+```bash
+git clone [repository-url]
+cd utakara
+```
+
+2. Create a `.env` file in the root directory:
+```bash
+ADMIN_USERNAME=your_admin_username
+ADMIN_PASSWORD=your_admin_password
+```
+
+3. Build and run with Docker:
+```bash
+docker build -t utakara .
+docker run -p 6666:6666 utakara
+```
+
+4. Open [http://localhost:6666](http://localhost:6666) in your browser
+
+### Method 2: Direct Installation
+
+1. Clone the repository:
+```bash
+git clone [repository-url]
+cd utakara
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create a `.env` file in the root directory:
+```bash
+ADMIN_USERNAME=your_admin_username
+ADMIN_PASSWORD=your_admin_password
+```
+
+4. Set up the database:
+```bash
+npm run migrate
+```
+
+5. Build and start the application:
+```bash
+npm run build
+npm start
+```
+
+6. Open [http://localhost:6666](http://localhost:6666) in your browser
+
+## Development
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app will run on [http://localhost:6666](http://localhost:6666) with hot-reload enabled.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Japanese song management with furigana support
+- Admin interface for song management
+- Interactive particle background
+- Search functionality
+- Mobile-responsive design
+
+## Technologies
+
+- Next.js 15
+- TypeScript
+- SQLite (better-sqlite3)
+- TailwindCSS
+- Framer Motion
+- Next Auth for authentication
 
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Learn Next.js](https://nextjs.org/learn)
 
 ## Deploy on Vercel
 
