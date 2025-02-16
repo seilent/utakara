@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, ChangeEvent, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
@@ -16,11 +16,18 @@ interface FormData {
   romaji: string;
 }
 
-export default function AdminPage() {
+interface PageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function EditSongPage({ params }: PageProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [existingImage, setExistingImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [crop, setCrop] = useState<Crop>({
@@ -38,6 +45,25 @@ export default function AdminPage() {
     lyrics: "",
     romaji: ""
   });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    // Fetch existing song data
+    fetch(`/api/songs/get?id=${params.id}`)
+      .then(res => res.json())
+      .then(data => {
+        setFormData({
+          titleJapanese: data.title.japanese,
+          titleEnglish: data.title.english,
+          artistJapanese: data.artist.japanese,
+          artistEnglish: data.artist.english,
+          lyrics: data.lyrics.japanese,
+          romaji: data.lyrics.romaji
+        });
+        setExistingImage(data.artwork);
+      })
+      .catch(err => setError(err.message));
+  }, [params.id]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setError(null);
@@ -58,7 +84,6 @@ export default function AdminPage() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setSelectedImage(event.target?.result as string);
-        // Reset crop when new image is selected
         setCrop({
           unit: '%',
           x: 0,
@@ -110,6 +135,28 @@ export default function AdminPage() {
     });
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this song?')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/songs?id=${params.id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete song');
+      }
+
+      router.push('/admin');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete song');
+      setIsDeleting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -118,38 +165,36 @@ export default function AdminPage() {
     try {
       if (!formData.titleJapanese || !formData.titleEnglish || 
           !formData.artistJapanese || !formData.artistEnglish || 
-          !formData.lyrics || !formData.romaji || !selectedImage) {
+          !formData.lyrics || !formData.romaji) {
         throw new Error('All fields are required');
       }
 
-      // Get cropped image
-      if (!imgRef.current) {
-        throw new Error('No image selected');
-      }
-
-      const croppedBlob = await getCroppedImg(imgRef.current, crop);
-      const croppedFile = new File([croppedBlob], fileInputRef.current?.files?.[0]?.name || 'artwork.jpg', {
-        type: 'image/jpeg'
-      });
-
       const formDataToSend = new FormData();
+      formDataToSend.append('id', params.id);
       Object.entries(formData).forEach(([key, value]) => {
         formDataToSend.append(key, value);
       });
-      formDataToSend.append('artwork', croppedFile);
+
+      // Only process new image if one was selected
+      if (selectedImage && imgRef.current) {
+        const croppedBlob = await getCroppedImg(imgRef.current, crop);
+        const croppedFile = new File([croppedBlob], fileInputRef.current?.files?.[0]?.name || 'artwork.jpg', {
+          type: 'image/jpeg'
+        });
+        formDataToSend.append('artwork', croppedFile);
+      }
 
       const response = await fetch('/api/songs', {
-        method: 'POST',
+        method: 'PUT',
         body: formDataToSend,
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to save song');
+        throw new Error(data.error || 'Failed to update song');
       }
 
-      const { songId } = await response.json();
-      router.push(`/songs/${songId}`);
+      router.push(`/songs/${params.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
@@ -159,7 +204,17 @@ export default function AdminPage() {
 
   return (
     <form onSubmit={handleSubmit} className="min-h-screen p-4 sm:p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Add New Song</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Edit Song</h1>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+        >
+          {isDeleting ? 'Deleting...' : 'Delete Song'}
+        </button>
+      </div>
 
       {error && (
         <motion.div
@@ -221,7 +276,7 @@ export default function AdminPage() {
             className="hidden"
           />
           <div className="flex flex-col items-center gap-4">
-            {selectedImage ? (
+            {selectedImage || existingImage ? (
               <div className="w-full max-w-md">
                 <ReactCrop
                   crop={crop}
@@ -232,18 +287,32 @@ export default function AdminPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     ref={imgRef}
-                    src={selectedImage}
+                    src={selectedImage || existingImage || ''}
                     alt="Selected artwork"
                     className="max-w-full h-auto"
                   />
                 </ReactCrop>
                 <button
                   type="button"
-                  onClick={() => setSelectedImage(null)}
-                  className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  onClick={handleUploadClick}
+                  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mr-2"
                 >
-                  Remove Image
+                  Change Image
                 </button>
+                {selectedImage && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedImage(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                    }}
+                    className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Cancel Change
+                  </button>
+                )}
               </div>
             ) : (
               <div
@@ -303,7 +372,7 @@ export default function AdminPage() {
               Saving...
             </>
           ) : (
-            'Save Song'
+            'Save Changes'
           )}
         </button>
       </div>
