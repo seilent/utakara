@@ -4,11 +4,13 @@ import path from 'path';
 import { insertSong } from '@/lib/db';
 import Database from 'better-sqlite3';
 
-const db = new Database(path.join(process.cwd(), 'songs.db'));
-
 interface DbSong {
   id: number;
   artwork: string;
+}
+
+function getDb() {
+  return new Database(path.join(process.cwd(), 'songs.db'));
 }
 
 export async function POST(request: Request) {
@@ -73,6 +75,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const db = getDb();
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -101,10 +104,13 @@ export async function DELETE(request: Request) {
       { error: 'Failed to delete song: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
     );
+  } finally {
+    db.close();
   }
 }
 
 export async function PUT(request: Request) {
+  const db = getDb();
   try {
     const data = await request.formData();
     const id = data.get('id') as string;
@@ -175,5 +181,7 @@ export async function PUT(request: Request) {
       { error: 'Failed to update song: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
     );
+  } finally {
+    db.close();
   }
 }
