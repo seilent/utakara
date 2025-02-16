@@ -15,19 +15,23 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const result = await signIn('credentials', {
-      username: formData.get('username'),
-      password: formData.get('password'),
-      redirect: false,
-    });
+    try {
+      const formData = new FormData(e.currentTarget);
+      const result = await signIn('credentials', {
+        username: formData.get('username'),
+        password: formData.get('password'),
+        redirect: false,
+      });
 
-    if (result?.error) {
-      setError('Invalid credentials');
+      if (result?.error) {
+        setError('Invalid credentials');
+      } else {
+        await router.push('/admin');
+      }
+    } catch (err) {
+      setError('An error occurred during login');
+    } finally {
       setLoading(false);
-    } else {
-      router.push('/admin');
-      router.refresh();
     }
   };
 
@@ -57,6 +61,7 @@ export default function LoginPage() {
               name="username"
               type="text"
               required
+              disabled={loading}
               className="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600"
             />
           </div>
@@ -67,6 +72,7 @@ export default function LoginPage() {
               name="password"
               type="password"
               required
+              disabled={loading}
               className="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600"
             />
           </div>
