@@ -111,7 +111,7 @@ export default function SongPage({ params }: PageProps) {
             </motion.div>
 
             <motion.div 
-              className="mt-4 space-y-4"
+              className="mt-4 space-y-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -133,13 +133,22 @@ export default function SongPage({ params }: PageProps) {
               </div>
 
               <div className="flex items-center gap-2">
+                <Link
+                  href="/"
+                  className="w-12 h-12 rounded-lg transition-colors flex items-center justify-center bg-black/20 hover:bg-black/30"
+                  style={{ color: colors.text }}
+                  aria-label="Return to Home"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                    <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
+                    <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198c.03-.028.061-.056.091-.086L12 5.432Z" />
+                  </svg>
+                </Link>
+
                 <button
                   onClick={() => setShowRomaji(prev => !prev)}
-                  className="w-12 h-12 rounded-lg transition-colors flex items-center justify-center text-lg font-bold"
-                  style={{ 
-                    backgroundColor: colors.secondary,
-                    color: colors.text
-                  }}
+                  className="w-12 h-12 rounded-lg transition-colors flex items-center justify-center bg-black/20 hover:bg-black/30 text-lg font-bold"
+                  style={{ color: colors.text }}
                   aria-label={showRomaji ? 'Show Japanese' : 'Show Romaji'}
                 >
                   {showRomaji ? 'あ' : 'A'}
@@ -147,20 +156,20 @@ export default function SongPage({ params }: PageProps) {
 
                 <Link 
                   href={`/admin/${song.id}`}
-                  className="px-4 h-12 rounded-lg transition-colors flex items-center justify-center"
-                  style={{ 
-                    backgroundColor: colors.secondary,
-                    color: colors.text
-                  }}
+                  className="w-12 h-12 rounded-lg transition-colors flex items-center justify-center bg-black/20 hover:bg-black/30"
+                  style={{ color: colors.text }}
+                  aria-label="Edit Song"
                 >
-                  Edit Song
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                    <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
+                  </svg>
                 </Link>
               </div>
             </motion.div>
           </div>
 
           <div className="md:col-span-2">
-            <div className="space-y-8 mt-4">
+            <div className="space-y-6 mt-4">
               <AnimatePresence mode="wait">
                 {(showRomaji ? romajiSections : japaneseSections).map((section: string[], sectionIndex: number) => (
                   <motion.div
@@ -169,7 +178,7 @@ export default function SongPage({ params }: PageProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ delay: sectionIndex * 0.05 }}
-                    className="space-y-4"
+                    className="space-y-2"
                   >
                     {section.map((line: string, lineIndex: number) => (
                       <p 

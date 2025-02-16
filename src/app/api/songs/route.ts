@@ -2,7 +2,14 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { insertSong } from '@/lib/db';
-import { db } from '@/lib/db';
+import Database from 'better-sqlite3';
+
+const db = new Database(path.join(process.cwd(), 'songs.db'));
+
+interface DbSong {
+  id: number;
+  artwork: string;
+}
 
 export async function POST(request: Request) {
   try {
@@ -22,13 +29,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Save the artwork file
+    // Save the artwork file with romaji name
     const buffer = Buffer.from(await artwork.arrayBuffer());
-    const artworkFilename = `${Date.now()}-${artwork.name}`;
+    const artworkExt = artwork.name.split('.').pop();
+    const safeRomaji = romaji.split('\n')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const artworkFilename = `${safeRomaji}.${artworkExt}`;
     const artworkPath = path.join(process.cwd(), 'public', 'uploads', artworkFilename);
     
     // Ensure uploads directory exists
     await fs.mkdir(path.join(process.cwd(), 'public', 'uploads'), { recursive: true });
+    
+    // Delete existing file if it exists
+    try {
+      await fs.unlink(artworkPath);
+    } catch (e) {
+      // Ignore if file doesn't exist
+    }
+    
     await fs.writeFile(artworkPath, buffer);
 
     // Insert into database
@@ -62,6 +79,16 @@ export async function DELETE(request: Request) {
 
     if (!id) {
       return NextResponse.json({ error: 'Song ID is required' }, { status: 400 });
+    }
+
+    // Get the song first to delete its artwork
+    const song = db.prepare('SELECT artwork FROM songs WHERE id = ?').get(parseInt(id)) as DbSong | undefined;
+    if (song?.artwork) {
+      try {
+        await fs.unlink(path.join(process.cwd(), 'public', song.artwork));
+      } catch (e) {
+        // Ignore if file doesn't exist
+      }
     }
 
     // Delete the song record from database
@@ -100,10 +127,22 @@ export async function PUT(request: Request) {
     if (artwork) {
       // Save the new artwork file
       const buffer = Buffer.from(await artwork.arrayBuffer());
-      const artworkFilename = `${Date.now()}-${artwork.name}`;
+      const artworkExt = artwork.name.split('.').pop();
+      const safeRomaji = romaji.split('\n')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const artworkFilename = `${safeRomaji}.${artworkExt}`;
       artworkPath = `/uploads/${artworkFilename}`;
+      
       await fs.mkdir(path.join(process.cwd(), 'public', 'uploads'), { recursive: true });
-      await fs.writeFile(path.join(process.cwd(), 'public', 'uploads', artworkFilename), buffer);
+      const fullPath = path.join(process.cwd(), 'public', artworkPath);
+      
+      // Delete existing file if it exists
+      try {
+        await fs.unlink(fullPath);
+      } catch (e) {
+        // Ignore if file doesn't exist
+      }
+      
+      await fs.writeFile(fullPath, buffer);
     }
 
     // Update the database

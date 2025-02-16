@@ -8,10 +8,12 @@ export default async function Home() {
   
   return (
     <main className="min-h-screen p-4 sm:p-8">
-      <h1 className="text-4xl font-bold mb-8 text-center">
-        歌カラ
-        <span className="block text-xl text-gray-600 dark:text-gray-400">
-          UtaKara
+      <h1 className="text-4xl font-bold mb-8 text-center relative">
+        <span className="inline-block px-6 py-3 rounded-lg text-white text-shadow-lg">
+          歌カラ
+          <span className="block text-xl mt-1 text-white/90 font-medium">
+            UtaKara
+          </span>
         </span>
       </h1>
       
