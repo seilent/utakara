@@ -24,8 +24,8 @@ cd utakara
 
 2. Create a `.env` file in the root directory:
 ```bash
-ADMIN_USERNAME=your_admin_username
-ADMIN_PASSWORD=your_admin_password
+ADMIN_USERNAME=your_admin_username # Optional, defaults to "admin"
+ADMIN_PASSWORD=your_admin_password # Optional, defaults to "admin"
 NEXTAUTH_SECRET=your_random_secret_key # Required for NextAuth.js session encryption
 NEXTAUTH_URL=https://your-domain.com # Required in production, defaults to http://localhost:4000 in development
 ```
@@ -56,8 +56,8 @@ npm install
 
 3. Create a `.env` file in the root directory:
 ```bash
-ADMIN_USERNAME=your_admin_username
-ADMIN_PASSWORD=your_admin_password
+ADMIN_USERNAME=your_admin_username # Optional, defaults to "admin"
+ADMIN_PASSWORD=your_admin_password # Optional, defaults to "admin"
 NEXTAUTH_SECRET=your_random_secret_key # Required for NextAuth.js session encryption
 ```
 You can generate a secure NEXTAUTH_SECRET by:
@@ -76,6 +76,22 @@ npm start
 ```
 
 6. Open [http://localhost:4000](http://localhost:4000) in your browser
+
+## Default Credentials
+The default login credentials are:
+- Username: admin
+- Password: admin
+
+It is highly recommended to change these credentials after your first login.
+
+### Changing Admin Credentials
+1. Log in to the application using your current credentials
+2. Navigate to `/admin/settings` in your browser
+3. Under the "Change Credentials" section, enter:
+   - Your current password
+   - Your new desired username
+   - Your new desired password
+4. Click "Update Credentials" to save the changes
 
 ## Development
 

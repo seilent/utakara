@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { updateEnvFile } from '@/lib/env-utils';
 
+const DEFAULT_PASSWORD = "admin";
+
 export async function POST(request: NextRequest) {
   const session = await getServerSession();
 
@@ -12,8 +14,9 @@ export async function POST(request: NextRequest) {
   try {
     const { currentPassword, newUsername, newPassword } = await request.json();
 
-    // Verify current password
-    if (currentPassword !== process.env.ADMIN_PASSWORD) {
+    // Verify current password against env or default
+    const adminPassword = process.env.ADMIN_PASSWORD || DEFAULT_PASSWORD;
+    if (currentPassword !== adminPassword) {
       return NextResponse.json({ error: 'Current password is incorrect' }, { status: 403 });
     }
 

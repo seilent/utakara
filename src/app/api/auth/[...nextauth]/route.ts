@@ -1,6 +1,9 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+const DEFAULT_USERNAME = "admin";
+const DEFAULT_PASSWORD = "admin";
+
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
@@ -10,9 +13,11 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // This is a simple example. In production, you should use proper authentication
-        if (credentials?.username === process.env.ADMIN_USERNAME && 
-            credentials?.password === process.env.ADMIN_PASSWORD) {
+        const adminUsername = process.env.ADMIN_USERNAME || DEFAULT_USERNAME;
+        const adminPassword = process.env.ADMIN_PASSWORD || DEFAULT_PASSWORD;
+        
+        if (credentials?.username === adminUsername && 
+            credentials?.password === adminPassword) {
           return {
             id: "1",
             name: credentials?.username || "",
