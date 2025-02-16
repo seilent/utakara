@@ -1,10 +1,10 @@
-import { SAMPLE_SONGS } from './sample-songs';
+import { SAMPLE_SONGS } from '../src/data/songs';
 import { insertSong } from '../src/lib/db';
 
-async function migrateSongs() {
+export async function migrateSampleSongs() {
   for (const song of SAMPLE_SONGS) {
     try {
-      insertSong({
+      await insertSong({
         title_japanese: song.title.japanese,
         title_english: song.title.english,
         artist_japanese: song.artist.japanese,
@@ -19,6 +19,3 @@ async function migrateSongs() {
     }
   }
 }
-
-// Just call the function directly
-migrateSongs().catch(console.error);
