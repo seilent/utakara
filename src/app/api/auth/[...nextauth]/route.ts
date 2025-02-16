@@ -4,6 +4,12 @@ import CredentialsProvider from "next-auth/providers/credentials";
 const DEFAULT_USERNAME = "admin";
 const DEFAULT_PASSWORD = "admin";
 
+// Helper to clean environment variables from quotes
+const cleanEnvVar = (value: string | undefined, defaultValue: string) => {
+  if (!value) return defaultValue;
+  return value.replace(/^["']|["']$/g, '');
+};
+
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
@@ -13,8 +19,8 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        const adminUsername = process.env.ADMIN_USERNAME || DEFAULT_USERNAME;
-        const adminPassword = process.env.ADMIN_PASSWORD || DEFAULT_PASSWORD;
+        const adminUsername = cleanEnvVar(process.env.ADMIN_USERNAME, DEFAULT_USERNAME);
+        const adminPassword = cleanEnvVar(process.env.ADMIN_PASSWORD, DEFAULT_PASSWORD);
         
         // Debug logging
         console.log('Attempt login with:', {
@@ -41,6 +47,9 @@ const handler = NextAuth({
     signIn: "/login",
   },
   debug: true,
+  session: {
+    strategy: "jwt"
+  }
 });
 
 export { handler as GET, handler as POST };
