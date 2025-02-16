@@ -1,6 +1,7 @@
 # Utakara
 
-Manually add all your favorite songs and lyrics for karaoke purpose.
+Personal list to add your favorite song, and lyrics (including romaji).  
+It's not an automatic process, more like manual entry database.  
 
 ## Prerequisites
 
