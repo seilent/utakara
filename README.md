@@ -26,7 +26,12 @@ cd utakara
 ```bash
 ADMIN_USERNAME=your_admin_username
 ADMIN_PASSWORD=your_admin_password
+NEXTAUTH_SECRET=your_random_secret_key # Required for NextAuth.js session encryption
+NEXTAUTH_URL=https://your-domain.com # Required in production, defaults to http://localhost:4000 in development
 ```
+You can generate a secure NEXTAUTH_SECRET by:
+- Using the [NextAuth Secret Generator](https://generate-secret.vercel.app/32)
+- Or running this command: `node -e "console.log(crypto.randomBytes(32).toString('hex'))"`
 
 3. Build and run with Docker:
 ```bash
@@ -53,7 +58,12 @@ npm install
 ```bash
 ADMIN_USERNAME=your_admin_username
 ADMIN_PASSWORD=your_admin_password
+NEXTAUTH_SECRET=your_random_secret_key # Required for NextAuth.js session encryption
+NEXTAUTH_URL=https://your-domain.com # Required in production, defaults to http://localhost:4000 in development
 ```
+You can generate a secure NEXTAUTH_SECRET by:
+- Using the [NextAuth Secret Generator](https://generate-secret.vercel.app/32)
+- Or running this command: `node -e "console.log(crypto.randomBytes(32).toString('hex'))"`
 
 4. Set up the database:
 ```bash
