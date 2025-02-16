@@ -15,7 +15,7 @@ const handler = NextAuth({
             credentials?.password === process.env.ADMIN_PASSWORD) {
           return {
             id: "1",
-            name: credentials.username,
+            name: credentials?.username || "",
             email: "admin@example.com"
           };
         }
