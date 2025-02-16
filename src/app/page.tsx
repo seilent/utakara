@@ -1,8 +1,17 @@
-import { getAllSongs } from '@/lib/db';
+'use client';
+
+import { useState, useEffect } from 'react';
 import SongGrid from '@/components/SongGrid';
 
-export default async function Home() {
-  const songs = await getAllSongs();
+export default function Home() {
+  const [songs, setSongs] = useState([]);
+  
+  useEffect(() => {
+    fetch('/api/songs/get')
+      .then(res => res.json())
+      .then(data => setSongs(data))
+      .catch(error => console.error('Error fetching songs:', error));
+  }, []);
   
   return (
     <main className="min-h-screen p-4 sm:p-8">
