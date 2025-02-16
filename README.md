@@ -36,7 +36,7 @@ You can generate a secure NEXTAUTH_SECRET by:
 3. Build and run with Docker:
 ```bash
 docker build -t utakara .
-docker run -p 4000:4000 utakara
+docker run -p 4000:4000 --env-file .env utakara
 ```
 
 4. Open [http://localhost:4000](http://localhost:4000) in your browser
