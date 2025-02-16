@@ -22,13 +22,6 @@ const handler = NextAuth({
         const adminUsername = cleanEnvVar(process.env.ADMIN_USERNAME, DEFAULT_USERNAME);
         const adminPassword = cleanEnvVar(process.env.ADMIN_PASSWORD, DEFAULT_PASSWORD);
         
-        // Debug logging
-        console.log('Attempt login with:', {
-          providedUsername: credentials?.username,
-          expectedUsername: adminUsername,
-          credentialsMatch: credentials?.username === adminUsername && credentials?.password === adminPassword
-        });
-        
         if (credentials?.username === adminUsername && 
             credentials?.password === adminPassword) {
           return {
@@ -38,7 +31,6 @@ const handler = NextAuth({
           };
         }
         
-        console.log('Authentication failed');
         throw new Error('Invalid credentials');
       }
     })
@@ -46,7 +38,6 @@ const handler = NextAuth({
   pages: {
     signIn: "/login",
   },
-  debug: true,
   session: {
     strategy: "jwt"
   }

@@ -27,7 +27,6 @@ cd utakara
 ADMIN_USERNAME=your_admin_username # Optional, defaults to "admin"
 ADMIN_PASSWORD=your_admin_password # Optional, defaults to "admin"
 NEXTAUTH_SECRET=your_random_secret_key # Required for NextAuth.js session encryption
-NEXTAUTH_URL=https://your-domain.com # Required in production, defaults to http://localhost:4000 in development
 ```
 You can generate a secure NEXTAUTH_SECRET by:
 - Using the [NextAuth Secret Generator](https://generate-secret.vercel.app/32)

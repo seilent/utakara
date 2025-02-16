@@ -28,7 +28,7 @@ export default function LoginPage() {
       } else {
         await router.push('/admin');
       }
-    } catch (_err) {
+    } catch {
       setError('An error occurred during login');
     } finally {
       setLoading(false);
