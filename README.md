@@ -3,6 +3,13 @@
 Personal list to add your favorite song, and lyrics (including romaji).  
 It's not an automatic process, more like manual entry database.  
 
+![chrome_wguPz3d6x3](https://github.com/user-attachments/assets/17744d1c-83b3-4850-af86-793ce1c543e0)
+
+
+![chrome_Le4qeKJFdB](https://github.com/user-attachments/assets/2d05169c-6ea5-480c-aa58-651032c34624) ![chrome_ytSMgG5x1n](https://github.com/user-attachments/assets/7011a4c0-5735-4a6d-b541-9307117289be)
+
+
+
 ## Prerequisites
 
 - Node.js 18 or later
