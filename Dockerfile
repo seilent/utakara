@@ -8,7 +8,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
+# Copy .env file first
+COPY .env .env
+
+# Then copy the rest of the application
 COPY . .
+
+# Set environment variables from .env file
+ENV $(cat .env | xargs)
 
 RUN npm run build
 
