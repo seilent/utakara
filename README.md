@@ -1,11 +1,16 @@
 # Utakara
 
-A Next.js application for managing Japanese songs.
+Manually add all your favorite songs and lyrics for karaoke purpose.
 
 ## Prerequisites
 
 - Node.js 18 or later
-- Docker (optional)
+- Python 3 (required for building native dependencies)
+- Build tools (for non-Docker installation):
+  - Linux: `make`, `g++`, `pkgconfig`, `cairo-dev`, `pango-dev`, `jpeg-dev`, `giflib-dev`, `librsvg-dev`
+  - Windows: Visual Studio Build Tools with C++ workload
+  - macOS: Xcode Command Line Tools
+- Docker (optional, includes all build dependencies)
 
 ## Installation
 
@@ -26,10 +31,10 @@ ADMIN_PASSWORD=your_admin_password
 3. Build and run with Docker:
 ```bash
 docker build -t utakara .
-docker run -p 6666:6666 utakara
+docker run -p 4000:4000 utakara
 ```
 
-4. Open [http://localhost:6666](http://localhost:6666) in your browser
+4. Open [http://localhost:4000](http://localhost:4000) in your browser
 
 ### Method 2: Direct Installation
 
@@ -61,7 +66,7 @@ npm run build
 npm start
 ```
 
-6. Open [http://localhost:6666](http://localhost:6666) in your browser
+6. Open [http://localhost:4000](http://localhost:4000) in your browser
 
 ## Development
 
@@ -71,7 +76,7 @@ Run the development server:
 npm run dev
 ```
 
-The app will run on [http://localhost:6666](http://localhost:6666) with hot-reload enabled.
+The app will run on [http://localhost:4000](http://localhost:4000) with hot-reload enabled.
 
 ## Features
 

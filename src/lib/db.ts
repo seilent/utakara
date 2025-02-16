@@ -1,11 +1,20 @@
 import Database from 'better-sqlite3';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { join } from 'path';
+import { Song } from '@/types/song';
 
 let db: Database.Database;
+
+interface DbSong {
+  id: number;
+  title_japanese: string;
+  title_english: string;
+  artist_japanese: string;
+  artist_english: string;
+  artwork: string;
+  lyrics_japanese: string;
+  lyrics_romaji: string;
+  created_at: string;
+}
 
 try {
   db = new Database(join(process.cwd(), 'songs.db'));
@@ -29,11 +38,11 @@ try {
   throw error;
 }
 
-export async function getAllSongs() {
+export async function getAllSongs(): Promise<Song[]> {
   try {
     return new Promise((resolve, reject) => {
       try {
-        const songs = db.prepare('SELECT * FROM songs ORDER BY created_at DESC').all();
+        const songs = db.prepare('SELECT * FROM songs ORDER BY created_at DESC').all() as DbSong[];
         resolve(songs.map(formatSongFromDb));
       } catch (error) {
         reject(error);
@@ -45,11 +54,11 @@ export async function getAllSongs() {
   }
 }
 
-export async function getSongById(id: number) {
+export async function getSongById(id: number): Promise<Song | null> {
   try {
     return new Promise((resolve, reject) => {
       try {
-        const song = db.prepare('SELECT * FROM songs WHERE id = ?').get(id);
+        const song = db.prepare('SELECT * FROM songs WHERE id = ?').get(id) as DbSong | undefined;
         resolve(song ? formatSongFromDb(song) : null);
       } catch (error) {
         reject(error);
@@ -102,7 +111,7 @@ export async function insertSong(song: {
   }
 }
 
-function formatSongFromDb(dbSong: any) {
+function formatSongFromDb(dbSong: DbSong): Song {
   return {
     id: dbSong.id.toString(),
     title: {

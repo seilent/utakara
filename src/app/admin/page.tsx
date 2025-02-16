@@ -2,7 +2,6 @@
 
 import { useState, useRef, ChangeEvent } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';

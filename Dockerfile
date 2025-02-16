@@ -1,5 +1,8 @@
 FROM node:18-alpine
 
+# Install Python and build dependencies
+RUN apk add --no-cache python3 make g++ pkgconfig cairo-dev pango-dev jpeg-dev giflib-dev librsvg-dev
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -9,6 +12,7 @@ COPY . .
 
 RUN npm run build
 
-EXPOSE 6666
+ENV PORT=4000
+EXPOSE 4000
 
 CMD ["npm", "start"]

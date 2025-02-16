@@ -46,7 +46,7 @@ export default function AdminSettings() {
         const data = await response.json();
         setMessage(data.error || 'Failed to update credentials');
       }
-    } catch (error) {
+    } catch {
       setMessage('An error occurred');
     }
   };

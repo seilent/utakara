@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     // Delete existing file if it exists
     try {
       await fs.unlink(artworkPath);
-    } catch (e) {
+    } catch {
       // Ignore if file doesn't exist
     }
     
@@ -86,7 +86,7 @@ export async function DELETE(request: Request) {
     if (song?.artwork) {
       try {
         await fs.unlink(path.join(process.cwd(), 'public', song.artwork));
-      } catch (e) {
+      } catch {
         // Ignore if file doesn't exist
       }
     }
@@ -138,7 +138,7 @@ export async function PUT(request: Request) {
       // Delete existing file if it exists
       try {
         await fs.unlink(fullPath);
-      } catch (e) {
+      } catch {
         // Ignore if file doesn't exist
       }
       

@@ -80,7 +80,7 @@ export default function SongPage({ params }: PageProps) {
         console.error('Error extracting colors:', error);
       }
     };
-  }, [song?.artwork]);
+  }, [song?.artwork, colors.primary, colors.secondary, colors.text]);
 
   // Effect to cleanup document background color
   useEffect(() => {
