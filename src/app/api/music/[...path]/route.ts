@@ -32,7 +32,8 @@ export async function GET(request: Request) {
       });
     }
 
-    const fileBuffer = await fs.promises.readFile(filePath);
+    const stat = await fs.promises.stat(filePath);
+    const fileSize = stat.size;
     const ext = path.extname(filePath).toLowerCase();
     const mimeType = {
       '.webm': 'audio/webm',
@@ -41,10 +42,35 @@ export async function GET(request: Request) {
       '.opus': 'audio/opus'
     }[ext] || 'audio/webm';
 
+    const rangeHeader = request.headers.get('range');
+    if (rangeHeader) {
+      const parts = rangeHeader.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = end - start + 1;
+      const file = await fs.promises.open(filePath, 'r');
+      const buffer = Buffer.alloc(chunkSize);
+      await file.read(buffer, 0, chunkSize, start);
+      await file.close();
+
+      return new Response(buffer, {
+        status: 206,
+        headers: {
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunkSize.toString(),
+          'Content-Type': mimeType,
+          'Cache-Control': 'no-cache'
+        }
+      });
+    }
+
+    const fileBuffer = await fs.promises.readFile(filePath);
     return new Response(fileBuffer, {
       headers: {
         'Content-Type': mimeType,
-        'Content-Length': fileBuffer.length.toString(),
+        'Content-Length': fileSize.toString(),
+        'Accept-Ranges': 'bytes',
         'Cache-Control': 'no-cache'
       }
     });
