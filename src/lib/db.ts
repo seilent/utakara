@@ -28,7 +28,7 @@ try {
       title_english TEXT NOT NULL,
       artist_japanese TEXT NOT NULL,
       artist_english TEXT NOT NULL,
-      artwork TEXT NOT NULL,
+      artwork TEXT,
       lyrics_japanese TEXT NOT NULL,
       lyrics_romaji TEXT NOT NULL,
       youtube_url TEXT,
