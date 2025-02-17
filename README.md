@@ -1,7 +1,16 @@
 # Utakara
 
 Personal list to add your favorite song, and lyrics (including romaji).  
-It's not an automatic process, more like manual entry database.  
+It's not an automatic process, more like manual entry database with YouTube integration for audio playback.
+
+## Features
+
+- Add and manage songs with Japanese and English titles/artists
+- Automatic YouTube search and audio integration
+- Audio playback with waveform visualization
+- Background download queue with retry support
+- Configurable audio storage (local or proxy)
+- Romaji lyrics support
 
 ![chrome_wguPz3d6x3](https://github.com/user-attachments/assets/17744d1c-83b3-4850-af86-793ce1c543e0)
 
@@ -14,11 +23,62 @@ It's not an automatic process, more like manual entry database.
 
 - Node.js 18 or later
 - Python 3 (required for building native dependencies)
+- FFmpeg (required for audio processing)
+  - Windows: Download from [FFmpeg Builds](https://github.com/BtbN/FFmpeg-Builds/releases)
+    1. Download the latest `ffmpeg-n*.*.*-win64-gpl-*.zip`
+    2. Extract the ZIP file
+    3. Copy `ffmpeg.exe` and `ffprobe.exe` from the `bin` folder to `utakara/bin/`
+  - Linux: `sudo apt install ffmpeg` (Ubuntu/Debian) or `sudo dnf install ffmpeg` (Fedora)
+  - macOS: `brew install ffmpeg`
 - Build tools (for non-Docker installation):
   - Linux: `make`, `g++`, `pkgconfig`, `cairo-dev`, `pango-dev`, `jpeg-dev`, `giflib-dev`, `librsvg-dev`
   - Windows: Visual Studio Build Tools with C++ workload
   - macOS: Xcode Command Line Tools
 - Docker (optional, includes all build dependencies)
+- YouTube Data API v3 key (for auto-searching songs)
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```bash
+# Admin credentials (optional, defaults to "admin")
+ADMIN_USERNAME=your_admin_username
+ADMIN_PASSWORD=your_admin_password
+
+# Required for NextAuth.js session encryption
+NEXTAUTH_SECRET=your_random_secret_key
+
+# Required for YouTube API (for auto-searching songs)
+YOUTUBE_API_KEY=your_youtube_api_key
+
+# Audio storage configuration (optional)
+AUDIO_STORAGE=local # or "proxy"
+AUDIO_PROXY_URL=https://your-proxy-url.com # required if using proxy storage
+```
+
+### YouTube API Setup
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the YouTube Data API v3
+4. Create credentials (API key)
+5. Copy the API key to your .env file
+
+### Audio Storage Configuration
+
+The application supports two modes for audio storage:
+
+1. **Local Storage (default)**
+   - Audio files are downloaded and stored locally
+   - Better performance and reliability
+   - Requires more disk space
+
+2. **Proxy Storage**
+   - Audio is streamed through a proxy server
+   - No local storage required
+   - Requires setting up a proxy server
+   - Set `AUDIO_STORAGE=proxy` and configure `AUDIO_PROXY_URL`
 
 ## Installation
 

@@ -1,0 +1,184 @@
+[2025-02-17T12:21:54.434Z] INFO [Song 32]: Enqueueing download for song 32
+[2025-02-17T12:21:54.435Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:21:58.478Z] WARN [Song 32]: Download failed for song 32, retry 1/3
+[2025-02-17T12:22:03.478Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:22:07.356Z] WARN [Song 32]: Download failed for song 32, retry 2/3
+[2025-02-17T12:22:12.357Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:22:16.352Z] WARN [Song 32]: Download failed for song 32, retry 3/3
+[2025-02-17T12:22:21.353Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:22:25.246Z] ERROR [Song 32]: Download permanently failed for song 32
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 -o \"Z:\\git\\utakara\\music/32.%(ext)s\" \"https://www.youtube.com/watch?v=2-zPY0vrpjQ\""
+}
+[2025-02-17T12:22:31.410Z] INFO [Song 32]: Enqueueing download for song 32
+[2025-02-17T12:22:31.410Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:22:35.324Z] WARN [Song 32]: Download failed for song 32, retry 1/3
+[2025-02-17T12:22:40.324Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:22:40.679Z] INFO [Song 32]: Enqueueing download for song 32
+[2025-02-17T12:22:40.679Z] INFO [Song 32]: Song 32 already in queue, updating URL
+[2025-02-17T12:22:44.416Z] WARN [Song 32]: Download failed for song 32, retry 2/3
+[2025-02-17T12:22:49.416Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:22:53.191Z] WARN [Song 32]: Download failed for song 32, retry 3/3
+[2025-02-17T12:22:58.191Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:23:02.232Z] ERROR [Song 32]: Download permanently failed for song 32
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 -o \"Z:\\git\\utakara\\music/32.%(ext)s\" \"https://www.youtube.com/watch?v=2-zPY0vrpjQ\""
+}
+[2025-02-17T12:26:50.527Z] INFO [Song 32]: Enqueueing download for song 32
+[2025-02-17T12:26:50.529Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:26:54.397Z] WARN [Song 32]: Download failed for song 32, retry 1/3
+[2025-02-17T12:26:59.399Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:27:03.153Z] WARN [Song 32]: Download failed for song 32, retry 2/3
+[2025-02-17T12:27:08.153Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:27:12.073Z] WARN [Song 32]: Download failed for song 32, retry 3/3
+[2025-02-17T12:27:17.074Z] INFO [Song 32]: Starting download for song 32
+[2025-02-17T12:27:21.357Z] ERROR [Song 32]: Download permanently failed for song 32
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/32.%(ext)s\" \"https://www.youtube.com/watch?v=2-zPY0vrpjQ\""
+}
+[2025-02-17T14:07:36.173Z] INFO [Song 21]: Enqueueing download for song 21
+[2025-02-17T14:07:36.174Z] INFO [Song 21]: Starting download for song 21
+[2025-02-17T14:07:40.570Z] WARN [Song 21]: Download failed for song 21, retry 1/3
+[2025-02-17T14:07:43.960Z] INFO [Song 21]: Enqueueing download for song 21
+[2025-02-17T14:07:43.961Z] INFO [Song 21]: Song 21 already in queue, updating URL
+[2025-02-17T14:07:45.571Z] INFO [Song 21]: Starting download for song 21
+[2025-02-17T14:07:49.529Z] WARN [Song 21]: Download failed for song 21, retry 2/3
+[2025-02-17T14:07:54.530Z] INFO [Song 21]: Starting download for song 21
+[2025-02-17T14:07:58.759Z] WARN [Song 21]: Download failed for song 21, retry 3/3
+[2025-02-17T14:08:03.759Z] INFO [Song 21]: Starting download for song 21
+[2025-02-17T14:08:07.757Z] ERROR [Song 21]: Download permanently failed for song 21
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/21.%(ext)s\" \"https://www.youtube.com/watch?v=Xg-qfsKN2_E\""
+}
+[2025-02-17T17:03:50.884Z] INFO [Song 9]: Enqueueing download for song 9
+[2025-02-17T17:03:50.885Z] INFO [Song 9]: Starting download for song 9
+[2025-02-17T17:03:57.631Z] WARN [Song 9]: Download failed for song 9, retry 1/3
+[2025-02-17T17:04:02.632Z] INFO [Song 9]: Starting download for song 9
+[2025-02-17T17:04:06.463Z] WARN [Song 9]: Download failed for song 9, retry 2/3
+[2025-02-17T17:04:11.464Z] INFO [Song 9]: Starting download for song 9
+[2025-02-17T17:04:15.097Z] WARN [Song 9]: Download failed for song 9, retry 3/3
+[2025-02-17T17:04:20.100Z] INFO [Song 9]: Starting download for song 9
+[2025-02-17T17:04:23.806Z] ERROR [Song 9]: Download permanently failed for song 9
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/9.%(ext)s\" \"https://www.youtube.com/watch?v=xxFkW3PCT5M\""
+}
+[2025-02-17T17:10:20.243Z] INFO [Song 24]: Enqueueing download for song 24
+[2025-02-17T17:10:20.244Z] INFO [Song 24]: Starting download for song 24
+[2025-02-17T17:10:25.129Z] WARN [Song 24]: Download failed for song 24, retry 1/3
+[2025-02-17T17:10:30.130Z] INFO [Song 24]: Starting download for song 24
+[2025-02-17T17:10:33.863Z] WARN [Song 24]: Download failed for song 24, retry 2/3
+[2025-02-17T17:10:38.863Z] INFO [Song 24]: Starting download for song 24
+[2025-02-17T17:10:42.772Z] WARN [Song 24]: Download failed for song 24, retry 3/3
+[2025-02-17T17:10:47.774Z] INFO [Song 24]: Starting download for song 24
+[2025-02-17T17:10:51.372Z] ERROR [Song 24]: Download permanently failed for song 24
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/24.%(ext)s\" \"https://www.youtube.com/watch?v=tczcAHLCyKM\""
+}
+[2025-02-17T17:13:25.607Z] INFO [Song 22]: Enqueueing download for song 22
+[2025-02-17T17:13:25.607Z] INFO [Song 22]: Starting download for song 22
+[2025-02-17T17:13:29.642Z] WARN [Song 22]: Download failed for song 22, retry 1/3
+[2025-02-17T17:13:34.642Z] INFO [Song 22]: Starting download for song 22
+[2025-02-17T17:13:38.380Z] WARN [Song 22]: Download failed for song 22, retry 2/3
+[2025-02-17T17:13:43.381Z] INFO [Song 22]: Starting download for song 22
+[2025-02-17T17:13:47.234Z] WARN [Song 22]: Download failed for song 22, retry 3/3
+[2025-02-17T17:13:52.236Z] INFO [Song 22]: Starting download for song 22
+[2025-02-17T17:13:56.465Z] ERROR [Song 22]: Download permanently failed for song 22
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/22.%(ext)s\" \"https://www.youtube.com/watch?v=AS4q9yaWJkI\""
+}
+[2025-02-17T17:19:23.494Z] INFO [Song 24]: Enqueueing download for song 24
+[2025-02-17T17:19:23.494Z] INFO [Song 24]: Starting download for song 24
+[2025-02-17T17:19:27.313Z] WARN [Song 24]: Download failed for song 24, retry 1/3
+[2025-02-17T17:19:32.313Z] INFO [Song 24]: Starting download for song 24
+[2025-02-17T17:19:35.953Z] WARN [Song 24]: Download failed for song 24, retry 2/3
+[2025-02-17T17:19:40.954Z] INFO [Song 24]: Starting download for song 24
+[2025-02-17T17:19:44.801Z] WARN [Song 24]: Download failed for song 24, retry 3/3
+[2025-02-17T17:19:49.801Z] INFO [Song 24]: Starting download for song 24
+[2025-02-17T17:19:53.709Z] ERROR [Song 24]: Download permanently failed for song 24
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/24.%(ext)s\" \"https://www.youtube.com/watch?v=tczcAHLCyKM\""
+}
+[2025-02-17T17:52:33.166Z] INFO: Starting cleanup job scheduler
+[2025-02-17T17:52:33.167Z] INFO: Starting audio cleanup process
+[2025-02-17T17:52:33.201Z] INFO: Found 0 audio files to check
+[2025-02-17T17:52:33.201Z] INFO: Completed audio cleanup process
+[2025-02-17T17:52:33.218Z] INFO: Starting cleanup job scheduler
+[2025-02-17T17:52:33.219Z] INFO: Starting audio cleanup process
+[2025-02-17T17:52:33.261Z] INFO: Found 0 audio files to check
+[2025-02-17T17:52:33.261Z] INFO: Completed audio cleanup process
+[2025-02-17T17:52:33.276Z] INFO: Starting cleanup job scheduler
+[2025-02-17T17:52:33.277Z] INFO: Starting audio cleanup process
+[2025-02-17T17:52:33.308Z] INFO: Found 0 audio files to check
+[2025-02-17T17:52:33.309Z] INFO: Completed audio cleanup process
+[2025-02-17T17:52:33.294Z] INFO: Starting cleanup job scheduler
+[2025-02-17T17:52:33.296Z] INFO: Starting audio cleanup process
+[2025-02-17T17:52:33.323Z] INFO: Found 0 audio files to check
+[2025-02-17T17:52:33.324Z] INFO: Completed audio cleanup process
+[2025-02-17T17:52:33.303Z] INFO: Starting cleanup job scheduler
+[2025-02-17T17:52:33.304Z] INFO: Starting audio cleanup process
+[2025-02-17T17:52:33.330Z] INFO: Found 0 audio files to check
+[2025-02-17T17:52:33.330Z] INFO: Completed audio cleanup process
+[2025-02-17T17:52:33.304Z] INFO: Starting cleanup job scheduler
+[2025-02-17T17:52:33.305Z] INFO: Starting audio cleanup process
+[2025-02-17T17:52:33.335Z] INFO: Found 0 audio files to check
+[2025-02-17T17:52:33.336Z] INFO: Completed audio cleanup process
+[2025-02-17T17:52:33.337Z] INFO: Starting cleanup job scheduler
+[2025-02-17T17:52:33.338Z] INFO: Starting audio cleanup process
+[2025-02-17T17:52:33.366Z] INFO: Found 0 audio files to check
+[2025-02-17T17:52:33.366Z] INFO: Completed audio cleanup process
+[2025-02-17T17:52:33.349Z] INFO: Starting cleanup job scheduler
+[2025-02-17T17:52:33.351Z] INFO: Starting audio cleanup process
+[2025-02-17T17:52:33.383Z] INFO: Found 0 audio files to check
+[2025-02-17T17:52:33.383Z] INFO: Completed audio cleanup process
+[2025-02-17T17:52:35.787Z] INFO: Starting cleanup job scheduler
+[2025-02-17T17:52:35.788Z] INFO: Starting audio cleanup process
+[2025-02-17T17:52:35.950Z] INFO: Found 0 audio files to check
+[2025-02-17T17:52:35.950Z] INFO: Completed audio cleanup process
+[2025-02-17T17:53:43.696Z] INFO [Song 30]: Cancelling download for song 30
+[2025-02-17T17:53:53.209Z] INFO [Song 32]: Cancelling download for song 32
+[2025-02-17T17:54:06.524Z] INFO [Song 33]: Cancelling download for song 33
+[2025-02-17T17:54:17.119Z] INFO [Song 34]: Cancelling download for song 34
+[2025-02-17T17:54:20.385Z] INFO [Song 35]: Cancelling download for song 35
+[2025-02-17T17:54:26.811Z] INFO [Song 36]: Cancelling download for song 36
+[2025-02-17T17:54:29.807Z] INFO [Song 37]: Cancelling download for song 37
+[2025-02-17T17:54:32.846Z] INFO [Song 38]: Cancelling download for song 38
+[2025-02-17T17:54:36.440Z] INFO [Song 39]: Cancelling download for song 39
+[2025-02-17T17:54:48.679Z] INFO [Song 17]: Enqueueing download for song 17
+[2025-02-17T17:54:48.679Z] INFO [Song 17]: Starting download for song 17
+[2025-02-17T17:54:51.955Z] WARN [Song 17]: Download failed for song 17, retry 1/3
+[2025-02-17T17:54:56.955Z] INFO [Song 17]: Starting download for song 17
+[2025-02-17T17:55:00.535Z] WARN [Song 17]: Download failed for song 17, retry 2/3
+[2025-02-17T17:55:05.536Z] INFO [Song 17]: Starting download for song 17
+[2025-02-17T17:55:09.259Z] WARN [Song 17]: Download failed for song 17, retry 3/3
+[2025-02-17T17:55:14.260Z] INFO [Song 17]: Starting download for song 17
+[2025-02-17T17:55:17.945Z] ERROR [Song 17]: Download permanently failed for song 17
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/17.%(ext)s\" \"https://www.youtube.com/watch?v=2-zPY0vrpjQ\""
+}

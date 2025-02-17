@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, ChangeEvent, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from 'next/navigation';
 
@@ -11,6 +11,7 @@ interface FormData {
   artistEnglish: string;
   lyrics: string;
   romaji: string;
+  youtubeUrl: string;
 }
 
 export default function AdminPage() {
@@ -25,8 +26,11 @@ export default function AdminPage() {
     artistJapanese: "",
     artistEnglish: "",
     lyrics: "",
-    romaji: ""
+    romaji: "",
+    youtubeUrl: ""
   });
+  const [isSearchingYoutube, setIsSearchingYoutube] = useState(false);
+  const youtubeSearchTimerRef = useRef<NodeJS.Timeout>();
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setError(null);
@@ -98,6 +102,49 @@ export default function AdminPage() {
     }
   };
 
+  useEffect(() => {
+    const searchYoutube = async () => {
+      if (!formData.titleJapanese || !formData.artistJapanese || formData.youtubeUrl || isSearchingYoutube) {
+        return;
+      }
+      
+      setIsSearchingYoutube(true);
+      try {
+        const query = `${formData.titleJapanese} ${formData.artistJapanese}`;
+        const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        
+        if (data.url) {
+          setFormData(prev => ({
+            ...prev,
+            youtubeUrl: data.url
+          }));
+        }
+      } catch (error) {
+        console.error('Error searching YouTube:', error);
+      } finally {
+        setIsSearchingYoutube(false);
+      }
+    };
+
+    // Clear existing timer
+    if (youtubeSearchTimerRef.current) {
+      clearTimeout(youtubeSearchTimerRef.current);
+    }
+
+    // Set new timer to debounce the search
+    youtubeSearchTimerRef.current = setTimeout(() => {
+      searchYoutube();
+    }, 1000); // Wait 1 second after last input change
+
+    // Cleanup timer on unmount or when dependencies change
+    return () => {
+      if (youtubeSearchTimerRef.current) {
+        clearTimeout(youtubeSearchTimerRef.current);
+      }
+    };
+  }, [formData.titleJapanese, formData.artistJapanese, formData.youtubeUrl, isSearchingYoutube]);
+
   return (
     <form onSubmit={handleSubmit} className="min-h-screen p-4 sm:p-8 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">Add New Song</h1>
@@ -152,6 +199,41 @@ export default function AdminPage() {
           </div>
         </div>
 
+        <div className="col-span-full">
+          <label className="block text-sm font-medium mb-1">YouTube URL</label>
+          <div className="flex gap-2">
+            <input
+              name="youtubeUrl"
+              value={formData.youtubeUrl}
+              onChange={handleInputChange}
+              className="flex-1 p-2 rounded border dark:bg-gray-800 dark:border-gray-700"
+              placeholder="https://www.youtube.com/watch?v=..."
+            />
+            {formData.youtubeUrl && (
+              <button
+                type="button"
+                className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                onClick={() => setFormData(prev => ({ ...prev, youtubeUrl: "" }))}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          {formData.youtubeUrl && (
+            <div className="mt-2 aspect-video rounded-lg overflow-hidden">
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${new URL(formData.youtubeUrl).searchParams.get('v')}`}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          )}
+        </div>
+
         <div className="w-full">
           <label className="block text-sm font-medium mb-1">Artwork</label>
           <input
@@ -161,14 +243,14 @@ export default function AdminPage() {
             accept="image/*"
             className="hidden"
           />
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-4 w-full">
             {selectedImage ? (
-              <div className="w-full max-w-md">
+              <div className="w-full">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={selectedImage}
                   alt="Selected artwork"
-                  className="max-w-full h-auto"
+                  className="w-full h-auto object-cover aspect-square"
                 />
                 <button
                   type="button"
@@ -181,7 +263,7 @@ export default function AdminPage() {
             ) : (
               <div
                 onClick={handleUploadClick}
-                className="w-full max-w-md h-64 border-2 border-dashed rounded flex items-center justify-center cursor-pointer hover:border-blue-500 transition-colors"
+                className="w-full h-64 border-2 border-dashed rounded flex items-center justify-center cursor-pointer hover:border-blue-500 transition-colors"
               >
                 <div className="text-center">
                   <p>Click to upload</p>

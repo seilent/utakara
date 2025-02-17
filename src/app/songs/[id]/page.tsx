@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import MusicPlayer from '@/components/MusicPlayer';
 
 // Utility functions for color contrast
 function hexToRgb(hex: string) {
@@ -79,12 +80,14 @@ interface Song {
     japanese: string;
     romaji: string;
   };
+  youtube_url?: string;
 }
 
 export default function SongPage({ params }: PageProps) {
   const { id } = use(params);
   const [song, setSong] = useState<Song | null>(null);
   const [showRomaji, setShowRomaji] = useState(true);
+  const [hasAudio, setHasAudio] = useState(false);
   const [colors, setColors] = useState<{
     primary: string;
     secondary: string;
@@ -94,6 +97,25 @@ export default function SongPage({ params }: PageProps) {
     secondary: 'rgb(51 65 85)',
     text: 'rgb(255 255 255)'
   });
+
+  // Effect for checking audio availability
+  useEffect(() => {
+    const checkAudio = async () => {
+      try {
+        const response = await fetch(`/api/songs/${id}/exists`);
+        const data = await response.json();
+        setHasAudio(data.exists);
+        console.log('Audio exists:', data.exists); // Debugger statement
+      } catch (error) {
+        console.error('Error checking audio status:', error);
+        setHasAudio(false);
+      }
+    };
+    
+    if (id) {
+      checkAudio();
+    }
+  }, [id]);
 
   // Effect for fetching song data
   useEffect(() => {
@@ -159,7 +181,10 @@ export default function SongPage({ params }: PageProps) {
   return (
     <main 
       className="min-h-screen p-4 sm:p-8 transition-colors duration-500"
-      style={{ backgroundColor: colors.primary }}
+      style={{ 
+        backgroundColor: colors.primary,
+        paddingBottom: hasAudio ? 'calc(2rem + 85px)' : '2rem' // Account for bottom bar height
+      }}
     >
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -174,10 +199,21 @@ export default function SongPage({ params }: PageProps) {
                 alt={`${song.title.japanese} - ${song.artist.japanese}`}
                 fill
                 priority
-                className="object-cover"
+                className="object-cover pointer-events-none"
                 sizes="(max-width: 768px) 100vw, 33vw"
                 unoptimized
               />
+              {hasAudio && (
+                <MusicPlayer
+                  audioUrl={`/api/music/${id}`}
+                  songId={id}
+                  artwork={song.artwork}
+                  colors={colors}
+                  hasAudio={hasAudio}
+                  title={song.title}
+                  artist={song.artist}
+                />
+              )}
             </motion.div>
             <div className="mt-6">
               <h1 className="text-3xl font-bold" style={{ color: colors.text }}>
@@ -222,6 +258,20 @@ export default function SongPage({ params }: PageProps) {
                     <path fillRule="evenodd" d="M9 2.25a.75.75 0 01.75.75v1.506a49.38 49.38 0 015.343.371.75.75 0 11-.186 1.489c-.66-.083-1.323-.151-1.99-.206a18.67 18.67 0 01-2.969 6.323c.317.384.65.753.998 1.107a.75.75 0 11-1.07 1.052A18.902 18.902 0 019 13.687a18.823 18.823 0 01-5.656 4.482.75.75 0 11-.688-1.333 17.323 17.323 0 005.396-4.353A18.72 18.72 0 015.89 8.598a.75.75 0 011.388-.568A17.21 17.21 0 009 11.224a17.17 17.17 0 002.391-5.165 48.038 48.038 0 00-8.298.307.75.75 0 01-.186-1.489 49.159 49.159 0 015.343-.371V3A.75.75 0 019 2.25zM15.75 9a.75.75 0 01.68.433l5.25 11.25a.75.75 0 01-1.36.634l-1.198-2.567h-6.744l-1.198 2.567a.75.75 0 01-1.36-.634l5.25-11.25A.75.75 0 0115.75 9zm-2.672 8.25h5.344l-2.672-5.726-2.672 5.726z" clipRule="evenodd" />
                   </svg>
                 </button>
+                {song.youtube_url && (
+                  <a
+                    href={song.youtube_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 rounded-lg transition-colors flex items-center justify-center bg-black/20 hover:bg-black/30"
+                    style={{ color: colors.text }}
+                    aria-label="Watch on YouTube"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                      <path fillRule="evenodd" d="M19,2 C20.6568542,2 22,3.34314575 22,5 L22,19 C22,20.6568542 20.6568542,22 19,22 L5,22 C3.34314575,22 2,20.6568542 2,19 L2,5 C2,3.34314575 3.34314575,2 5,2 L19,2 Z M4,17 L4,19 C4,19.5522847 4.44771525,20 5,20 L6,20 L6,17 L4,17 Z M16,13 L8,13 L8,20 L16,20 L16,13 Z M20,17 L18,17 L18,20 L19,20 C19.5522847,20 20,19.5522847 20,19 L20,17 Z M20,9 L18,9 L18,15 L20,15 L20,9 Z M16,4 L8,4 L8,11 L16,11 L16,4 Z M19,4 L18,4 L18,7 L20,7 L20,5 C20,4.44771525 19.5522847,4 19,4 Z M6,4 L5,4 C4.44771525,4 4,4.44771525 4,5 L4,7 L6,7 L6,4 Z M4,15 L6,15 L6,9 L4,9 L4,15 Z" />
+                    </svg>
+                  </a>
+                )}
               </div>
             </div>
           </div>

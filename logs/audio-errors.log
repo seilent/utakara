@@ -1,0 +1,63 @@
+[2025-02-17T12:22:25.246Z] ERROR [Song 32]: Download permanently failed for song 32
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 -o \"Z:\\git\\utakara\\music/32.%(ext)s\" \"https://www.youtube.com/watch?v=2-zPY0vrpjQ\""
+}
+[2025-02-17T12:23:02.232Z] ERROR [Song 32]: Download permanently failed for song 32
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 -o \"Z:\\git\\utakara\\music/32.%(ext)s\" \"https://www.youtube.com/watch?v=2-zPY0vrpjQ\""
+}
+[2025-02-17T12:27:21.357Z] ERROR [Song 32]: Download permanently failed for song 32
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/32.%(ext)s\" \"https://www.youtube.com/watch?v=2-zPY0vrpjQ\""
+}
+[2025-02-17T14:08:07.757Z] ERROR [Song 21]: Download permanently failed for song 21
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/21.%(ext)s\" \"https://www.youtube.com/watch?v=Xg-qfsKN2_E\""
+}
+[2025-02-17T17:04:23.806Z] ERROR [Song 9]: Download permanently failed for song 9
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/9.%(ext)s\" \"https://www.youtube.com/watch?v=xxFkW3PCT5M\""
+}
+[2025-02-17T17:10:51.372Z] ERROR [Song 24]: Download permanently failed for song 24
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/24.%(ext)s\" \"https://www.youtube.com/watch?v=tczcAHLCyKM\""
+}
+[2025-02-17T17:13:56.465Z] ERROR [Song 22]: Download permanently failed for song 22
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/22.%(ext)s\" \"https://www.youtube.com/watch?v=AS4q9yaWJkI\""
+}
+[2025-02-17T17:19:53.709Z] ERROR [Song 24]: Download permanently failed for song 24
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/24.%(ext)s\" \"https://www.youtube.com/watch?v=tczcAHLCyKM\""
+}
+[2025-02-17T17:55:17.945Z] ERROR [Song 17]: Download permanently failed for song 17
+{
+  "code": 1,
+  "killed": false,
+  "signal": null,
+  "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/17.%(ext)s\" \"https://www.youtube.com/watch?v=2-zPY0vrpjQ\""
+}

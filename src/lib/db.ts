@@ -13,6 +13,7 @@ interface DbSong {
   artwork: string;
   lyrics_japanese: string;
   lyrics_romaji: string;
+  youtube_url: string | null;
   created_at: string;
 }
 
@@ -30,12 +31,25 @@ try {
       artwork TEXT NOT NULL,
       lyrics_japanese TEXT NOT NULL,
       lyrics_romaji TEXT NOT NULL,
+      youtube_url TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 } catch (error) {
   console.error('Failed to initialize database:', error);
   throw error;
+}
+
+export async function migrate() {
+  try {
+    // Add youtube_url column if it doesn't exist
+    db.exec(`
+      ALTER TABLE songs ADD COLUMN youtube_url TEXT;
+    `);
+  } catch {
+    // Column already exists, ignore
+    console.log('youtube_url column already exists');
+  }
 }
 
 export async function getAllSongs(): Promise<Song[]> {
@@ -103,6 +117,7 @@ export async function insertSong(song: {
   artwork: string;
   lyrics_japanese: string;
   lyrics_romaji: string;
+  youtube_url: string | null;
 }) {
   try {
     return new Promise((resolve, reject) => {
@@ -111,8 +126,9 @@ export async function insertSong(song: {
           INSERT INTO songs (
             title_japanese, title_english,
             artist_japanese, artist_english,
-            artwork, lyrics_japanese, lyrics_romaji
-          ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            artwork, lyrics_japanese, lyrics_romaji,
+            youtube_url
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `);
 
         const result = stmt.run(
@@ -122,7 +138,8 @@ export async function insertSong(song: {
           song.artist_english,
           song.artwork,
           song.lyrics_japanese,
-          song.lyrics_romaji
+          song.lyrics_romaji,
+          song.youtube_url
         );
 
         resolve(result.lastInsertRowid);
@@ -152,5 +169,6 @@ function formatSongFromDb(dbSong: DbSong): Song {
       japanese: dbSong.lyrics_japanese,
       romaji: dbSong.lyrics_romaji,
     },
+    youtube_url: dbSong.youtube_url || undefined,
   };
 }

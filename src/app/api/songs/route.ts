@@ -4,10 +4,13 @@ import path from 'path';
 import { insertSong } from '@/lib/db';
 import Database from 'better-sqlite3';
 import { revalidateTag } from 'next/cache';
+import { deleteAudio } from '@/lib/audio';
+import { downloadQueue } from '@/lib/download-queue';
 
 interface DbSong {
   id: number;
   artwork: string;
+  youtube_url?: string;
 }
 
 function getDb() {
@@ -24,10 +27,11 @@ export async function POST(request: Request) {
     const lyrics = data.get('lyrics') as string;
     const romaji = data.get('romaji') as string;
     const artwork = data.get('artwork') as File;
+    const youtubeUrl = data.get('youtubeUrl') as string;
 
     if (!titleJapanese || !titleEnglish || !artistJapanese || !artistEnglish || !lyrics || !romaji || !artwork) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'All fields except YouTube URL are required' },
         { status: 400 }
       );
     }
@@ -60,6 +64,7 @@ export async function POST(request: Request) {
       artwork: `/api/uploads/${artworkFilename}`,
       lyrics_japanese: lyrics,
       lyrics_romaji: romaji,
+      youtube_url: youtubeUrl || null,
     });
 
     // Revalidate the uploads directory
@@ -88,20 +93,32 @@ export async function DELETE(request: Request) {
     if (!id) {
       return NextResponse.json({ error: 'Song ID is required' }, { status: 400 });
     }
+    
+    const songId = parseInt(id);
 
-    // Get the song first to delete its artwork
-    const song = db.prepare('SELECT artwork FROM songs WHERE id = ?').get(parseInt(id)) as DbSong | undefined;
-    if (song?.artwork) {
-      try {
-        const filename = song.artwork.split('/').pop();
-        await fs.unlink(path.join(process.cwd(), 'uploads', filename || ''));
-      } catch {
-        // Ignore if file doesn't exist
+    // Get the song first to delete its files
+    const song = db.prepare('SELECT id, artwork, youtube_url FROM songs WHERE id = ?').get(songId) as DbSong | undefined;
+    
+    if (song) {
+      // Cancel any in-progress download
+      downloadQueue.cancelDownload(songId);
+
+      // Delete artwork file
+      if (song.artwork) {
+        try {
+          const filename = song.artwork.split('/').pop();
+          await fs.unlink(path.join(process.cwd(), 'uploads', filename || ''));
+        } catch {
+          // Ignore if file doesn't exist
+        }
       }
+
+      // Delete audio file if it exists
+      await deleteAudio(songId);
     }
 
     // Delete the song record from database
-    db.prepare('DELETE FROM songs WHERE id = ?').run(parseInt(id));
+    db.prepare('DELETE FROM songs WHERE id = ?').run(songId);
 
     // Revalidate after deletion
     revalidateTag('uploads');
@@ -124,6 +141,10 @@ export async function PUT(request: Request) {
   try {
     const data = await request.formData();
     const id = data.get('id') as string;
+    const songId = parseInt(id);
+    // Get existing song to check if YouTube URL changed
+    const existingSong = db.prepare('SELECT youtube_url FROM songs WHERE id = ?').get(songId) as { youtube_url: string | null } | undefined;
+    
     const titleJapanese = data.get('titleJapanese') as string;
     const titleEnglish = data.get('titleEnglish') as string;
     const artistJapanese = data.get('artistJapanese') as string;
@@ -131,10 +152,11 @@ export async function PUT(request: Request) {
     const lyrics = data.get('lyrics') as string;
     const romaji = data.get('romaji') as string;
     const artwork = data.get('artwork') as File | null;
+    const youtubeUrl = data.get('youtubeUrl') as string;
 
     if (!id || !titleJapanese || !titleEnglish || !artistJapanese || !artistEnglish || !lyrics || !romaji) {
       return NextResponse.json(
-        { error: 'All fields except artwork are required' },
+        { error: 'All fields except artwork and YouTube URL are required' },
         { status: 400 }
       );
     }
@@ -161,12 +183,19 @@ export async function PUT(request: Request) {
       await fs.writeFile(fullPath, buffer);
     }
 
+    // If YouTube URL changed, delete the old audio file
+    const newYoutubeUrl = youtubeUrl || null;
+    if (existingSong && existingSong.youtube_url !== newYoutubeUrl) {
+      await deleteAudio(songId);
+    }
+
     // Update the database
     const stmt = db.prepare(`
       UPDATE songs 
       SET title_japanese = ?, title_english = ?,
           artist_japanese = ?, artist_english = ?,
           ${artwork ? 'artwork = ?,' : ''}
+          youtube_url = ?,
           lyrics_japanese = ?, lyrics_romaji = ?
       WHERE id = ?
     `);
@@ -177,12 +206,20 @@ export async function PUT(request: Request) {
       artistJapanese,
       artistEnglish,
       ...(artwork ? [artworkPath] : []),
+      newYoutubeUrl,
       lyrics,
       romaji,
-      parseInt(id)
+      songId
     ];
 
     stmt.run(...params);
+
+    // If there's a YouTube URL, trigger the audio download
+    if (newYoutubeUrl) {
+      const filename = `${songId}.opus`;
+      const outputPath = path.join(process.cwd(), 'music', filename);
+      downloadQueue.enqueue(songId, newYoutubeUrl, outputPath);
+    }
 
     // Revalidate after update
     revalidateTag('uploads');

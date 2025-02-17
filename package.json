@@ -8,13 +8,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "node --loader ts-node/esm scripts/migrate.ts"
+    "migrate": "node --loader ts-node/esm scripts/migrate.ts",
+    "postinstall": "node --loader ts-node/esm scripts/download-yt-dlp.ts"
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
     "@swc-node/register": "^1.10.9",
     "better-sqlite3": "^11.8.1",
     "color-thief-node": "^1.0.4",
+    "extract-zip": "^2.0.1",
     "framer-motion": "^12.4.3",
     "next": "15.1.7",
     "next-auth": "^4.24.11",
@@ -22,7 +24,9 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-image-crop": "^11.0.7",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "wavesurfer.js": "^7.9.1",
+    "yt-dlp-wrap": "^2.3.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

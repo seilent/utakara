@@ -1,7 +1,11 @@
 import { SAMPLE_SONGS } from '../src/data/songs';
-import { insertSong } from '../src/lib/db';
+import { insertSong, migrate } from '../src/lib/db';
 
 export async function migrateSampleSongs() {
+  // First run the schema migration
+  await migrate();
+  
+  // Then migrate sample songs
   for (const song of SAMPLE_SONGS) {
     try {
       await insertSong({
@@ -12,6 +16,7 @@ export async function migrateSampleSongs() {
         artwork: song.artwork,
         lyrics_japanese: song.lyrics.japanese,
         lyrics_romaji: song.lyrics.romaji,
+        youtube_url: null
       });
       console.log(`Migrated song: ${song.title.english}`);
     } catch (error) {

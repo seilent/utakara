@@ -13,4 +13,5 @@ export interface Song {
     japanese: string;
     romaji: string;
   };
+  youtube_url?: string;
 }

@@ -7,6 +7,15 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb'
     }
+  },
+  // Add static file serving configuration
+  async rewrites() {
+    return [
+      {
+        source: '/music/:path*',
+        destination: '/api/music/:path*',
+      },
+    ];
   }
 };
 
