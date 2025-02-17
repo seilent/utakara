@@ -46,3 +46,7 @@ next-env.d.ts
 
 # database
 songs.db
+
+# logs
+/logs/
+*.log
