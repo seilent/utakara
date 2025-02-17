@@ -316,6 +316,8 @@ const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artis
     return savedVolume ? parseFloat(savedVolume) : 1;
   });
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const bufferingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -391,7 +393,69 @@ const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artis
     };
   }, []);
 
-  const togglePlay = () => {
+  // Add preload initialization
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.preload = "auto";
+    }
+  }, [audioUrl]);
+
+  // Enhanced buffering detection
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleProgress = () => {
+      if (!audio.duration) return;
+      
+      const buffered = audio.buffered;
+      const currentTime = audio.currentTime;
+      
+      // Check if we have enough buffer ahead
+      let hasEnoughBuffer = false;
+      for (let i = 0; i < buffered.length; i++) {
+        if (buffered.start(i) <= currentTime && buffered.end(i) >= currentTime + 10) {
+          hasEnoughBuffer = true;
+          break;
+        }
+      }
+      
+      if (!hasEnoughBuffer && !isBuffering) {
+        setIsBuffering(true);
+      } else if (hasEnoughBuffer && isBuffering) {
+        // Add a small delay before removing buffer indicator to prevent flashing
+        if (bufferingTimeoutRef.current) {
+          clearTimeout(bufferingTimeoutRef.current);
+        }
+        bufferingTimeoutRef.current = setTimeout(() => setIsBuffering(false), 500);
+      }
+    };
+
+    const handleWaiting = () => {
+      setIsBuffering(true);
+      setIsLoading(true);
+    };
+
+    const handlePlaying = () => {
+      setIsBuffering(false);
+      setIsLoading(false);
+    };
+
+    audio.addEventListener('progress', handleProgress);
+    audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('playing', handlePlaying);
+
+    return () => {
+      audio.removeEventListener('progress', handleProgress);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('playing', handlePlaying);
+      if (bufferingTimeoutRef.current) {
+        clearTimeout(bufferingTimeoutRef.current);
+      }
+    };
+  }, [isBuffering]);
+
+  const togglePlay = async () => {
     if (!audioRef.current) return;
     
     if (!hasStartedPlaying) {
@@ -400,13 +464,41 @@ const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artis
     
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play().catch(err => {
+      setIsLoading(true);
+      try {
+        // Start loading the audio
+        if (audioRef.current.readyState < 2) { // HAVE_CURRENT_DATA
+          await new Promise((resolve, reject) => {
+            const handleCanPlay = () => {
+              audioRef.current?.removeEventListener('canplay', handleCanPlay);
+              audioRef.current?.removeEventListener('error', handleError);
+              resolve(null);
+            };
+            
+            const handleError = (e: Event) => {
+              audioRef.current?.removeEventListener('canplay', handleCanPlay);
+              audioRef.current?.removeEventListener('error', handleError);
+              reject(e);
+            };
+
+            audioRef.current?.addEventListener('canplay', handleCanPlay);
+            audioRef.current?.addEventListener('error', handleError);
+            if (audioRef.current) {
+              audioRef.current.load();
+            }
+          });
+        }
+
+        await audioRef.current.play();
+        setIsPlaying(true);
+      } catch (err) {
         console.error('Error playing audio:', err);
+      } finally {
         setIsLoading(false);
-      });
+      }
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleVolumeChange = (newVolume: number) => {

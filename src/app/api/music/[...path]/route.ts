@@ -6,6 +6,9 @@ import { findAudioFile } from '@/lib/audio';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+// Optimal chunk size for streaming (2MB)
+const CHUNK_SIZE = 2 * 1024 * 1024;
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
@@ -46,7 +49,7 @@ export async function GET(request: Request) {
     if (rangeHeader) {
       const parts = rangeHeader.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + CHUNK_SIZE, fileSize - 1);
       const chunkSize = end - start + 1;
       const file = await fs.promises.open(filePath, 'r');
       const buffer = Buffer.alloc(chunkSize);
@@ -60,18 +63,26 @@ export async function GET(request: Request) {
           'Accept-Ranges': 'bytes',
           'Content-Length': chunkSize.toString(),
           'Content-Type': mimeType,
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'public, max-age=3600',
+          'Transfer-Encoding': 'chunked'
         }
       });
     }
 
-    const fileBuffer = await fs.promises.readFile(filePath);
-    return new Response(fileBuffer, {
+    // For initial request, only send the first chunk to start playback quickly
+    const initialChunkSize = Math.min(CHUNK_SIZE, fileSize);
+    const buffer = Buffer.alloc(initialChunkSize);
+    const file = await fs.promises.open(filePath, 'r');
+    await file.read(buffer, 0, initialChunkSize, 0);
+    await file.close();
+
+    return new Response(buffer, {
       headers: {
         'Content-Type': mimeType,
         'Content-Length': fileSize.toString(),
         'Accept-Ranges': 'bytes',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'public, max-age=3600',
+        'Transfer-Encoding': 'chunked'
       }
     });
   } catch (error) {
