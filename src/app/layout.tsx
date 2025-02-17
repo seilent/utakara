@@ -16,6 +16,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "歌カラ",
   description: "UtaKara",
+  icons: {
+    icon: [
+      {
+        url: "/favicon.svg",
+        type: "image/svg+xml",
+      }
+    ]
+  }
 };
 
 export default function RootLayout({
@@ -34,4 +42,5 @@ export default function RootLayout({
       </body>
     </html>
   );
+}
 }
