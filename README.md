@@ -131,13 +131,19 @@ You can generate a secure NEXTAUTH_SECRET by:
 - Using the [NextAuth Secret Generator](https://auth-secret-gen.vercel.app/)
 - Or running this command: `node -e "console.log(crypto.randomBytes(32).toString('hex'))"`
 
-4. Build and start the application:
+4. Initialize the database with sample songs:
+```bash
+npm run migrate
+```
+This will create a new database file and populate it with some sample songs. If you already have songs in your database, the migration will skip adding sample songs.
+
+5. Build and start the application:
 ```bash
 npm run build
 npm start
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 
 ## Admin Interface

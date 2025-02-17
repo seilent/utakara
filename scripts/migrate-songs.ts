@@ -1,11 +1,19 @@
 import { SAMPLE_SONGS } from '../src/data/songs';
-import { insertSong, migrate } from '../src/lib/db';
+import { insertSong, migrate, getAllSongs } from '../src/lib/db';
 
 export async function migrateSampleSongs() {
   // First run the schema migration
   await migrate();
   
-  // Then migrate sample songs
+  // Check if database is empty
+  const existingSongs = await getAllSongs();
+  if (existingSongs.length > 0) {
+    console.log('Database already contains songs, skipping sample data migration');
+    return;
+  }
+  
+  // Only populate sample songs if database is empty
+  console.log('Database is empty, populating with sample songs...');
   for (const song of SAMPLE_SONGS) {
     try {
       await insertSong({
