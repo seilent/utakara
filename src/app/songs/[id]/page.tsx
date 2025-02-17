@@ -7,6 +7,52 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Utility functions for color contrast
+function hexToRgb(hex: string) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+function getLuminance(r: number, g: number, b: number) {
+  const a = [r, g, b].map(v => {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+}
+
+function getContrastRatio(l1: number, l2: number) {
+  const lightest = Math.max(l1, l2);
+  const darkest = Math.min(l1, l2);
+  return (lightest + 0.05) / (darkest + 0.05);
+}
+
+function adjustColorForContrast(bgHex: string, textHex: string, minContrast = 4.5) {
+  const bg = hexToRgb(bgHex);
+  const text = hexToRgb(textHex);
+  
+  if (!bg || !text) return textHex;
+  
+  const bgLum = getLuminance(bg.r, bg.g, bg.b);
+  const textLum = getLuminance(text.r, text.g, text.b);
+  const contrast = getContrastRatio(bgLum, textLum);
+  
+  if (contrast >= minContrast) return textHex;
+  
+  // If contrast is insufficient, adjust the text color
+  if (bgLum > 0.5) {
+    // Dark text on light background
+    return '#000000';
+  } else {
+    // Light text on dark background
+    return '#ffffff';
+  }
+}
+
 async function getSong(id: number) {
   const res = await fetch(`/api/songs/get?id=${id}`);
   if (!res.ok) return null;
@@ -70,11 +116,20 @@ export default function SongPage({ params }: PageProps) {
       try {
         const { Vibrant } = await import('node-vibrant/browser');
         const palette = await Vibrant.from(img).getPalette();
+        
+        const primaryColor = palette.DarkVibrant?.hex || colors.primary;
+        const secondaryColor = palette.Vibrant?.hex || colors.secondary;
+        let textColor = palette.LightVibrant?.hex || colors.text;
+        
+        // Ensure text has good contrast against the background
+        textColor = adjustColorForContrast(primaryColor, textColor);
+        
         const newColors = {
-          primary: palette.DarkVibrant?.hex || colors.primary,
-          secondary: palette.Vibrant?.hex || colors.secondary,
-          text: palette.LightVibrant?.hex || colors.text
+          primary: primaryColor,
+          secondary: secondaryColor,
+          text: textColor
         };
+        
         setColors(newColors);
       } catch (error) {
         console.error('Error extracting colors:', error);
