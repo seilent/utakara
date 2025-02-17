@@ -1,4 +1,4 @@
-import { migrateSampleSongs } from './migrate-songs';
+import { migrateSampleSongs } from './migrate-songs.ts';
 
 async function main() {
   try {

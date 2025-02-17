@@ -133,7 +133,7 @@ You can generate a secure NEXTAUTH_SECRET by:
 
 4. Initialize the database with sample songs:
 ```bash
-npm run migrate
+npx ts-node --esm scripts/migrate.ts
 ```
 This will create a new database file and populate it with some sample songs. If you already have songs in your database, the migration will skip adding sample songs.
 
