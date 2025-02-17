@@ -1,14 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   serverExternalPackages: ['better-sqlite3'],
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb'
     }
   },
-  // Add static file serving configuration
   async rewrites() {
     return [
       {
@@ -16,6 +14,9 @@ const nextConfig: NextConfig = {
         destination: '/api/music/:path*',
       },
     ];
+  },
+  typescript: {
+    ignoreBuildErrors: false,
   }
 };
 

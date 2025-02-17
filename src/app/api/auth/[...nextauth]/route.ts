@@ -4,6 +4,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 const DEFAULT_USERNAME = "admin";
 const DEFAULT_PASSWORD = "admin";
 
+export const runtime = 'nodejs';
+
 // Helper to clean environment variables from quotes
 const cleanEnvVar = (value: string | undefined, defaultValue: string) => {
   if (!value) return defaultValue;
@@ -19,44 +21,37 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        try {
-          const adminUsername = cleanEnvVar(process.env.ADMIN_USERNAME, DEFAULT_USERNAME);
-          const adminPassword = cleanEnvVar(process.env.ADMIN_PASSWORD, DEFAULT_PASSWORD);
-          
-          if (credentials?.username === adminUsername && 
-              credentials?.password === adminPassword) {
-            return {
-              id: "1",
-              name: credentials.username,
-              email: "admin@example.com"
-            };
-          }
-          return null;
-        } catch (error) {
-          console.error('Auth error:', error);
-          return null;
+        console.log('Auth attempt for username:', credentials?.username);
+        const adminUsername = cleanEnvVar(process.env.ADMIN_USERNAME, DEFAULT_USERNAME);
+        const adminPassword = cleanEnvVar(process.env.ADMIN_PASSWORD, DEFAULT_PASSWORD);
+        
+        if (credentials?.username === adminUsername && 
+            credentials?.password === adminPassword) {
+          return {
+            id: "1",
+            name: credentials.username,
+            email: "admin@example.com"
+          };
         }
+        console.log('Auth failed: Invalid credentials');
+        return null;
       }
     })
   ],
   pages: {
     signIn: "/login",
   },
+  debug: true,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async session({ session, token }) {
-      try {
-        if (session?.user && token) {
-          session.user.id = token.sub;
-        }
-        return session;
-      } catch (error) {
-        console.error('Session callback error:', error);
-        return {};
+      if (session?.user && token) {
+        session.user.id = token.sub;
       }
+      return session;
     },
     async jwt({ token }) {
       return token;
