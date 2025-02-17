@@ -26,7 +26,9 @@ export function getAudioConfig(): AudioConfig {
 }
 
 export function getAudioFilePath(songId: number): string {
-  return path.join(process.cwd(), 'music', `${songId}`);
+  // In production Linux, use absolute path if provided
+  const musicPath = process.env.MUSIC_PATH || path.join(process.cwd(), 'music');
+  return path.join(musicPath, `${songId}`);
 }
 
 export function getAudioFileUrl(songId: number): string {
