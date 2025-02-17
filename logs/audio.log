@@ -182,3 +182,39 @@
   "signal": null,
   "cmd": "\"Z:\\git\\utakara\\bin\\yt-dlp.exe\" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location \"Z:\\git\\utakara\\bin\\ffmpeg.exe\" -o \"Z:\\git\\utakara\\music/17.%(ext)s\" \"https://www.youtube.com/watch?v=2-zPY0vrpjQ\""
 }
+[2025-02-17T18:19:55.953Z] INFO: Starting cleanup job scheduler
+[2025-02-17T18:19:55.955Z] INFO: Starting audio cleanup process
+[2025-02-17T18:19:56.002Z] INFO: Found 0 audio files to check
+[2025-02-17T18:19:56.002Z] INFO: Completed audio cleanup process
+[2025-02-17T18:19:55.952Z] INFO: Starting cleanup job scheduler
+[2025-02-17T18:19:55.954Z] INFO: Starting audio cleanup process
+[2025-02-17T18:19:56.008Z] INFO: Found 0 audio files to check
+[2025-02-17T18:19:56.008Z] INFO: Completed audio cleanup process
+[2025-02-17T18:19:56.031Z] INFO: Starting cleanup job scheduler
+[2025-02-17T18:19:56.032Z] INFO: Starting audio cleanup process
+[2025-02-17T18:19:56.069Z] INFO: Found 0 audio files to check
+[2025-02-17T18:19:56.069Z] INFO: Completed audio cleanup process
+[2025-02-17T18:19:56.031Z] INFO: Starting cleanup job scheduler
+[2025-02-17T18:19:56.033Z] INFO: Starting audio cleanup process
+[2025-02-17T18:19:56.072Z] INFO: Found 0 audio files to check
+[2025-02-17T18:19:56.073Z] INFO: Completed audio cleanup process
+[2025-02-17T18:19:56.081Z] INFO: Starting cleanup job scheduler
+[2025-02-17T18:19:56.084Z] INFO: Starting audio cleanup process
+[2025-02-17T18:19:56.122Z] INFO: Found 0 audio files to check
+[2025-02-17T18:19:56.122Z] INFO: Completed audio cleanup process
+[2025-02-17T18:19:56.112Z] INFO: Starting cleanup job scheduler
+[2025-02-17T18:19:56.113Z] INFO: Starting audio cleanup process
+[2025-02-17T18:19:56.106Z] INFO: Starting cleanup job scheduler
+[2025-02-17T18:19:56.107Z] INFO: Starting audio cleanup process
+[2025-02-17T18:19:56.144Z] INFO: Found 0 audio files to check
+[2025-02-17T18:19:56.144Z] INFO: Completed audio cleanup process
+[2025-02-17T18:19:56.144Z] INFO: Completed audio cleanup process
+[2025-02-17T18:19:56.144Z] INFO: Found 0 audio files to check
+[2025-02-17T18:19:56.124Z] INFO: Starting cleanup job scheduler
+[2025-02-17T18:19:56.125Z] INFO: Starting audio cleanup process
+[2025-02-17T18:19:56.155Z] INFO: Found 0 audio files to check
+[2025-02-17T18:19:56.155Z] INFO: Completed audio cleanup process
+[2025-02-17T18:19:58.832Z] INFO: Starting cleanup job scheduler
+[2025-02-17T18:19:58.833Z] INFO: Starting audio cleanup process
+[2025-02-17T18:19:58.929Z] INFO: Found 0 audio files to check
+[2025-02-17T18:19:58.930Z] INFO: Completed audio cleanup process

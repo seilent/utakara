@@ -41,7 +41,7 @@ export default function EditSongPage({ params }: PageProps) {
   });
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSearchingYoutube, setIsSearchingYoutube] = useState(false);
-  const youtubeSearchTimerRef = useRef<NodeJS.Timeout>();
+  const youtubeSearchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Fetch existing song data

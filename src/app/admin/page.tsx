@@ -30,7 +30,7 @@ export default function AdminPage() {
     youtubeUrl: ""
   });
   const [isSearchingYoutube, setIsSearchingYoutube] = useState(false);
-  const youtubeSearchTimerRef = useRef<NodeJS.Timeout>();
+  const youtubeSearchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setError(null);
