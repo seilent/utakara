@@ -52,7 +52,7 @@ docker run -p 4000:4000 --env-file .env utakara
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
+git clone https://github.com/seilent/utakara
 cd utakara
 ```
 
