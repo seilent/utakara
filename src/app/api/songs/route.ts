@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { insertSong } from '@/lib/db';
 import Database from 'better-sqlite3';
+import { revalidateTag } from 'next/cache';
 
 interface DbSong {
   id: number;
@@ -36,10 +37,10 @@ export async function POST(request: Request) {
     const artworkExt = artwork.name.split('.').pop() || 'jpg';
     const safeRomaji = romaji.split('\n')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
     const artworkFilename = `${safeRomaji}.${artworkExt}`;
-    const artworkPath = path.join(process.cwd(), 'public', 'uploads', artworkFilename);
+    const artworkPath = path.join(process.cwd(), 'uploads', artworkFilename);
     
     // Ensure uploads directory exists
-    await fs.mkdir(path.join(process.cwd(), 'public', 'uploads'), { recursive: true });
+    await fs.mkdir(path.join(process.cwd(), 'uploads'), { recursive: true });
     
     // Delete existing file if it exists
     try {
@@ -50,16 +51,20 @@ export async function POST(request: Request) {
     
     await fs.writeFile(artworkPath, buffer);
 
-    // Insert into database
+    // Insert into database with API route path
     const id = await insertSong({
       title_japanese: titleJapanese,
       title_english: titleEnglish,
       artist_japanese: artistJapanese,
       artist_english: artistEnglish,
-      artwork: `/uploads/${artworkFilename}`,
+      artwork: `/api/uploads/${artworkFilename}`,
       lyrics_japanese: lyrics,
       lyrics_romaji: romaji,
     });
+
+    // Revalidate the uploads directory
+    revalidateTag('uploads');
+    revalidateTag('songs');
 
     return NextResponse.json({ 
       success: true,
@@ -88,7 +93,8 @@ export async function DELETE(request: Request) {
     const song = db.prepare('SELECT artwork FROM songs WHERE id = ?').get(parseInt(id)) as DbSong | undefined;
     if (song?.artwork) {
       try {
-        await fs.unlink(path.join(process.cwd(), 'public', song.artwork));
+        const filename = song.artwork.split('/').pop();
+        await fs.unlink(path.join(process.cwd(), 'uploads', filename || ''));
       } catch {
         // Ignore if file doesn't exist
       }
@@ -96,6 +102,10 @@ export async function DELETE(request: Request) {
 
     // Delete the song record from database
     db.prepare('DELETE FROM songs WHERE id = ?').run(parseInt(id));
+
+    // Revalidate after deletion
+    revalidateTag('uploads');
+    revalidateTag('songs');
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -136,10 +146,10 @@ export async function PUT(request: Request) {
       const artworkExt = artwork.name.split('.').pop() || 'jpg';
       const safeRomaji = romaji.split('\n')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
       const artworkFilename = `${safeRomaji}.${artworkExt}`;
-      artworkPath = `/uploads/${artworkFilename}`;
+      artworkPath = `/api/uploads/${artworkFilename}`;
       
-      await fs.mkdir(path.join(process.cwd(), 'public', 'uploads'), { recursive: true });
-      const fullPath = path.join(process.cwd(), 'public', artworkPath);
+      await fs.mkdir(path.join(process.cwd(), 'uploads'), { recursive: true });
+      const fullPath = path.join(process.cwd(), 'uploads', artworkFilename);
       
       // Delete existing file if it exists
       try {
@@ -173,6 +183,10 @@ export async function PUT(request: Request) {
     ];
 
     stmt.run(...params);
+
+    // Revalidate after update
+    revalidateTag('uploads');
+    revalidateTag('songs');
 
     return NextResponse.json({ success: true });
   } catch (error) {
