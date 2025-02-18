@@ -201,7 +201,7 @@ class DownloadQueue {
       ].join(' ');
 
       // Set up environment with proper PATH
-      const env = {
+      const env: NodeJS.ProcessEnv = {
         ...process.env,
         PATH: `${binDir}${platform() === 'win32' ? ';' : ':'}${process.env.PATH}`,
         FFMPEG_PATH: FFMPEG_PATH
