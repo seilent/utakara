@@ -5,6 +5,7 @@ import { platform } from 'os';
 import { updateDownloadStatus, clearDownloadStatus, getDownloadStatus } from './audio-status';
 import { downloadRateLimiter } from './rate-limiter';
 import { audioLogger } from './audio-logger';
+import { FFMPEG_PATH } from './audio-config';
 
 type QueuedDownload = {
   songId: number;
@@ -172,15 +173,14 @@ class DownloadQueue {
     const ytDlpPath = getYtDlpPath();
     const outputDir = join(process.cwd(), 'music');
     const binDir = join(process.cwd(), 'bin');
-    const ffmpegPath = join(binDir, 'ffmpeg.exe');
 
     return new Promise(async (resolve, reject) => {
       try {
         // Verify ffmpeg exists and is accessible
-        await fs.access(ffmpegPath);
+        await fs.access(FFMPEG_PATH);
       } catch (error) {
-        audioLogger.error(`Failed to access ffmpeg at ${ffmpegPath}`, songId, error as Error);
-        reject(new Error(`FFmpeg not found at ${ffmpegPath}`));
+        audioLogger.error(`Failed to access ffmpeg at ${FFMPEG_PATH}`, songId, error as Error);
+        reject(new Error(`FFmpeg not found at ${FFMPEG_PATH}`));
         return;
       }
 
@@ -204,9 +204,13 @@ class DownloadQueue {
       const env = {
         ...process.env,
         PATH: `${binDir}${platform() === 'win32' ? ';' : ':'}${process.env.PATH}`,
-        FFMPEG_PATH: ffmpegPath,
-        PATHEXT: '.COM;.EXE;.BAT;.CMD'
+        FFMPEG_PATH: FFMPEG_PATH
       };
+
+      // Add Windows-specific env vars only on Windows
+      if (platform() === 'win32') {
+        env.PATHEXT = '.COM;.EXE;.BAT;.CMD';
+      }
 
       const currentProcess = exec(downloadCommand, { env }, async (downloadError: Error | null, stdout: string, stderr: string) => {
         if (downloadError) {
@@ -230,8 +234,7 @@ class DownloadQueue {
 
           // Convert to opus using ffmpeg
           const convertCommand = [
-            `cmd.exe /c "`,  // Use cmd.exe to ensure Windows path handling
-            `"${ffmpegPath}"`,
+            `"${FFMPEG_PATH}"`,
             '-hide_banner',  // Reduce noise in logs
             '-y', // Overwrite output file
             `-i "${downloadedPath}"`, // Input file
@@ -240,8 +243,7 @@ class DownloadQueue {
             '-b:a 128k', // Set bitrate
             '-application audio', // Optimize for audio
             '-compression_level 10', // Maximum compression
-            `"${finalOutput}"`, // Output file
-            '"' // Close cmd.exe quote
+            `"${finalOutput}"` // Output file
           ].join(' ');
 
           exec(convertCommand, { env }, async (convertError: Error | null, convertStdout: string, convertStderr: string) => {

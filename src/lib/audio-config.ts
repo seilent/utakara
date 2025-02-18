@@ -1,11 +1,25 @@
 import path from 'path';
 import { platform } from 'os';
+import { execSync } from 'child_process';
 
 export type AudioStorageType = 'local' | 'proxy';
 
+function findSystemBinary(name: string): string | null {
+  if (platform() === 'win32') return null;
+  
+  try {
+    const which = platform() === 'darwin' ? 'which' : 'command -v';
+    const path = execSync(`${which} ${name}`).toString().trim();
+    return path || null;
+  } catch {
+    return null;
+  }
+}
+
+// Try to find system FFmpeg first, fall back to bundled version
 const ext = platform() === 'win32' ? '.exe' : '';
-export const FFMPEG_PATH = path.join(process.cwd(), 'bin', `ffmpeg${ext}`);
-export const FFPROBE_PATH = path.join(process.cwd(), 'bin', `ffprobe${ext}`);
+export const FFMPEG_PATH = findSystemBinary('ffmpeg') || path.join(process.cwd(), 'bin', `ffmpeg${ext}`);
+export const FFPROBE_PATH = findSystemBinary('ffprobe') || path.join(process.cwd(), 'bin', `ffprobe${ext}`);
 
 interface AudioConfig {
   storageType: AudioStorageType;
