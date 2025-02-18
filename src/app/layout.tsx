@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { NextAuthProvider } from '@/components/NextAuthProvider';
+import { AuthProvider } from '@/components/AuthProvider';
 import { startCleanupJob } from '@/lib/audio-cleanup';
 import { startDiskSpaceMonitoring } from '@/lib/disk-monitor';
 import { join } from 'path';
@@ -76,9 +76,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NextAuthProvider>
+        <AuthProvider>
           {children}
-        </NextAuthProvider>
+        </AuthProvider>
       </body>
     </html>
   );

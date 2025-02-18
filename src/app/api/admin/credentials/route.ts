@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getSession } from '@/lib/session';
 import { updateEnvFile } from '@/lib/env-utils';
 
 const DEFAULT_PASSWORD = "admin";
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession();
+  const session = await getSession(request);
 
-  if (!session) {
+  if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

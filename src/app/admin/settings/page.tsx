@@ -1,27 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function AdminSettings() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [message, setMessage] = useState('');
-  
-  useEffect(() => {
-    if (status !== 'loading' && !session) {
-      router.push('/login');
-    }
-  }, [session, status, router]);
-
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
-
-  if (!session) {
-    return null;
-  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,37 +28,47 @@ export default function AdminSettings() {
         const data = await response.json();
         setMessage(data.error || 'Failed to update credentials');
       }
-    } catch {
-      setMessage('An error occurred');
+    } catch (error) {
+      console.error('Error updating credentials:', error);
+      setMessage('An error occurred while updating credentials');
     }
   };
 
   return (
-    <div className="p-8">
+    <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Admin Settings</h1>
       <form onSubmit={handleSubmit} className="max-w-md space-y-4">
         <div>
-          <label className="block mb-2">Current Password</label>
+          <label htmlFor="currentPassword" className="block text-sm font-medium mb-1">
+            Current Password
+          </label>
           <input
             type="password"
+            id="currentPassword"
             name="currentPassword"
             required
             className="w-full p-2 border rounded"
           />
         </div>
         <div>
-          <label className="block mb-2">New Username</label>
+          <label htmlFor="username" className="block text-sm font-medium mb-1">
+            New Username
+          </label>
           <input
             type="text"
+            id="username"
             name="username"
             required
             className="w-full p-2 border rounded"
           />
         </div>
         <div>
-          <label className="block mb-2">New Password</label>
+          <label htmlFor="password" className="block text-sm font-medium mb-1">
+            New Password
+          </label>
           <input
             type="password"
+            id="password"
             name="password"
             required
             className="w-full p-2 border rounded"
@@ -89,7 +81,7 @@ export default function AdminSettings() {
           Update Credentials
         </button>
         {message && (
-          <p className={`mt-4 ${message.includes('error') ? 'text-red-500' : 'text-green-500'}`}>
+          <p className={`mt-4 ${message.includes('error') || message.includes('Failed') ? 'text-red-500' : 'text-green-500'}`}>
             {message}
           </p>
         )}

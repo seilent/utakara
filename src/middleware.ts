@@ -1,20 +1,26 @@
 import { NextResponse, NextRequest } from 'next/server';
+import { getSession } from './lib/session';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = new URL(request.url);
   
-  // Skip middleware for public routes and API routes except retry
-  if ((pathname.startsWith('/api/') && !pathname.includes('/audio/retry')) || pathname === '/login') {
+  // Skip middleware for static assets and public API endpoints
+  if (
+    pathname.startsWith('/_next/') || 
+    pathname.startsWith('/api/auth/') ||
+    pathname === '/login'
+  ) {
     return NextResponse.next();
   }
 
-  // Check auth for admin routes and retry endpoint
+  // Check auth for admin routes and protected endpoints
   if (pathname.startsWith('/admin') || pathname.includes('/audio/retry')) {
-    const sessionToken = request.cookies.get('next-auth.session-token') || 
-                        request.cookies.get('__Secure-next-auth.session-token');
+    const session = await getSession(request);
                         
-    if (!sessionToken) {
-      return NextResponse.redirect(new URL('/login', request.url));
+    if (!session.isLoggedIn) {
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.headers.set('x-middleware-cache', 'no-cache');
+      return response;
     }
   }
   
@@ -23,7 +29,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/admin/:path*',
-    '/api/songs/:id/audio/retry'
+    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
   ]
 };
