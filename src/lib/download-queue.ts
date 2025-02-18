@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import { join } from 'path';
 import fs from 'fs/promises';
 import { platform } from 'os';
-import { updateDownloadStatus } from './audio-status';
+import { updateDownloadStatus, clearDownloadStatus, getDownloadStatus } from './audio-status';
 import { downloadRateLimiter } from './rate-limiter';
 import { audioLogger } from './audio-logger';
 
@@ -30,11 +30,18 @@ interface DownloadError {
 class DownloadQueue {
   private queue: QueuedDownload[] = [];
   private isProcessing = false;
-  private readonly maxRetries = 3;
+  private readonly maxRetries = 10;
   private readonly retryDelay = 5000; // 5 seconds
   private currentProcess: { process: ReturnType<typeof exec>; songId: number } | null = null;
 
   public async enqueue(songId: number, youtubeUrl: string, outputPath: string) {
+    // Check current status first
+    const currentStatus = getDownloadStatus(songId);
+    if (currentStatus.status === 'ready') {
+      audioLogger.info(`Skipping download for song ${songId} as it is already ready`, songId);
+      return;
+    }
+
     audioLogger.info(`Enqueueing download for song ${songId}`, songId);
     // Check if already in queue
     const existing = this.queue.find(d => d.songId === songId);
@@ -164,58 +171,119 @@ class DownloadQueue {
     const { songId, youtubeUrl } = download;
     const ytDlpPath = getYtDlpPath();
     const outputDir = join(process.cwd(), 'music');
-    const ffmpegPath = join(process.cwd(), 'bin', 'ffmpeg.exe');
+    const binDir = join(process.cwd(), 'bin');
+    const ffmpegPath = join(binDir, 'ffmpeg.exe');
 
-    return new Promise((resolve, reject) => {
-      // Use a temporary pattern for the output file that includes the extension
-      const tempOutput = `${outputDir}/${songId}.%(ext)s`;
-      
-      const process = exec(
-        `"${ytDlpPath}" -x --force-overwrites --audio-format opus --audio-quality 0 --ffmpeg-location "${ffmpegPath}" -o "${tempOutput}" "${youtubeUrl}"`,
-        async (error: Error | null) => {
-          this.currentProcess = null;
-          if (error) {
-            reject(error);
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Verify ffmpeg exists and is accessible
+        await fs.access(ffmpegPath);
+      } catch (error) {
+        audioLogger.error(`Failed to access ffmpeg at ${ffmpegPath}`, songId, error as Error);
+        reject(new Error(`FFmpeg not found at ${ffmpegPath}`));
+        return;
+      }
+
+      // Ensure output directory exists
+      await fs.mkdir(outputDir, { recursive: true }).catch(() => {});
+
+      // First download the audio in best quality
+      const tempOutput = `${outputDir}/${songId}_temp.%(ext)s`;
+      const downloadCommand = [
+        `"${ytDlpPath}"`,
+        '--no-check-certificate',
+        '--verbose',
+        '-f bestaudio',
+        '--no-playlist',
+        '-o',
+        `"${tempOutput}"`,
+        `"${youtubeUrl}"`
+      ].join(' ');
+
+      // Set up environment with proper PATH
+      const env = {
+        ...process.env,
+        PATH: `${binDir}${platform() === 'win32' ? ';' : ':'}${process.env.PATH}`,
+        FFMPEG_PATH: ffmpegPath,
+        PATHEXT: '.COM;.EXE;.BAT;.CMD'
+      };
+
+      const currentProcess = exec(downloadCommand, { env }, async (downloadError: Error | null, stdout: string, stderr: string) => {
+        if (downloadError) {
+          audioLogger.error(`Download failed for song ${songId}`, songId, { error: downloadError, stdout, stderr });
+          reject(downloadError);
+          return;
+        }
+
+        try {
+          // Find the downloaded file
+          const files = await fs.readdir(outputDir);
+          const downloadedFile = files.find(f => f.startsWith(`${songId}_temp.`));
+
+          if (!downloadedFile) {
+            reject(new Error('Downloaded file not found'));
             return;
           }
 
-          try {
-            // Find the actual downloaded file by checking common audio extensions
-            const files = await fs.readdir(outputDir);
-            const audioFile = files.find(f => f.startsWith(`${songId}.`) && 
-              /\.(opus|webm|m4a|mp3)$/i.test(f));
+          const downloadedPath = join(outputDir, downloadedFile);
+          const finalOutput = join(outputDir, `${songId}.opus`);
 
-            if (!audioFile) {
-              reject(new Error('Audio file not found after download'));
-              return;
+          // Convert to opus using ffmpeg
+          const convertCommand = [
+            `cmd.exe /c "`,  // Use cmd.exe to ensure Windows path handling
+            `"${ffmpegPath}"`,
+            '-hide_banner',  // Reduce noise in logs
+            '-y', // Overwrite output file
+            `-i "${downloadedPath}"`, // Input file
+            '-vn', // No video
+            '-c:a libopus', // Force opus codec
+            '-b:a 128k', // Set bitrate
+            '-application audio', // Optimize for audio
+            '-compression_level 10', // Maximum compression
+            `"${finalOutput}"`, // Output file
+            '"' // Close cmd.exe quote
+          ].join(' ');
+
+          exec(convertCommand, { env }, async (convertError: Error | null, convertStdout: string, convertStderr: string) => {
+            try {
+              if (convertError) {
+                audioLogger.error(`Conversion failed for song ${songId}`, songId, { error: convertError, stdout: convertStdout, stderr: convertStderr });
+                reject(convertError);
+                return;
+              }
+
+              // Verify the opus file exists
+              await fs.access(finalOutput);
+
+              // Clean up temporary file
+              try {
+                await fs.unlink(downloadedPath);
+              } catch (cleanupError) {
+                audioLogger.warn(`Failed to clean up temp file for song ${songId}`, songId);
+              }
+
+              await clearDownloadStatus(songId);
+              await updateDownloadStatus(songId, { status: 'ready' });
+              resolve();
+            } catch (error) {
+              audioLogger.error(`Post-conversion error for song ${songId}`, songId, error as Error);
+              reject(error);
             }
-
-            // Get the actual extension
-            const ext = audioFile.split('.').pop()!;
-            const finalPath = join(outputDir, `${songId}.${ext}`);
-
-            // Rename if needed (in case of leftover .opus.webm)
-            if (audioFile !== `${songId}.${ext}`) {
-              await fs.rename(join(outputDir, audioFile), finalPath);
-            }
-
-            updateDownloadStatus(songId, { status: 'ready' });
-            resolve();
-          } catch {
-            reject(new Error('Failed to process downloaded file'));
-          }
+          });
+        } catch (error) {
+          audioLogger.error(`Processing failed for song ${songId}`, songId, error as Error);
+          reject(error);
         }
-      );
+      });
 
-      // Store current process for potential cancellation
-      this.currentProcess = { process, songId };
+      this.currentProcess = { process: currentProcess, songId };
 
       // Track download progress
-      if (process.stderr) {
-        process.stderr.on('data', (data: string) => {
-          const match = data.match(/\[download\]\s+(\d+\.?\d*)%/);
-          if (match) {
-            const progress = parseFloat(match[1]);
+      if (currentProcess.stderr) {
+        currentProcess.stderr.on('data', (data: string) => {
+          const progressMatch = data.match(/\[download\]\s+(\d+\.?\d*)%/);
+          if (progressMatch) {
+            const progress = parseFloat(progressMatch[1]);
             updateDownloadStatus(songId, { 
               status: 'downloading', 
               progress 
@@ -223,6 +291,11 @@ class DownloadQueue {
           }
         });
       }
+
+      currentProcess.on('error', (error) => {
+        audioLogger.error(`Process error for song ${songId}`, songId, error);
+        reject(error);
+      });
     });
   }
 }

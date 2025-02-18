@@ -27,6 +27,7 @@ export default function EditSongPage({ params }: PageProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState<{ status: string; progress?: number } | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -159,6 +160,7 @@ export default function EditSongPage({ params }: PageProps) {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+    setDownloadStatus(null);
 
     try {
       if (!formData.titleJapanese || !formData.titleEnglish || 
@@ -191,7 +193,30 @@ export default function EditSongPage({ params }: PageProps) {
         throw new Error(data.error || 'Failed to update song');
       }
 
-      router.push(`/songs/${id}`);
+      // If YouTube URL changed, wait for download
+      const existingUrl = await fetch(`/api/songs/get?id=${id}`).then(r => r.json()).then(d => d.youtube_url);
+      if (formData.youtubeUrl !== existingUrl) {
+        let isDownloading = true;
+        
+        while (isDownloading) {
+          const statusResponse = await fetch(`/api/songs/${id}/audio/status`);
+          const statusData = await statusResponse.json();
+          
+          setDownloadStatus(statusData);
+          
+          if (statusData.status === 'ready') {
+            isDownloading = false;
+            router.push(`/songs/${id}`);
+          } else if (statusData.status === 'error') {
+            throw new Error(`Audio download failed: ${statusData.error?.message || 'Unknown error'}`);
+          } else {
+            // Wait 1 second before checking again
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      } else {
+        router.push(`/songs/${id}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
@@ -220,6 +245,33 @@ export default function EditSongPage({ params }: PageProps) {
           className="mb-4 p-4 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded"
         >
           {error}
+        </motion.div>
+      )}
+
+      {downloadStatus && downloadStatus.status !== 'ready' && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 p-4 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded"
+        >
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <span className="capitalize">
+                {downloadStatus.status === 'pending' ? 'Preparing download...' : 'Downloading audio...'}
+              </span>
+              {downloadStatus.progress && (
+                <span>{Math.round(downloadStatus.progress)}%</span>
+              )}
+            </div>
+            {downloadStatus.progress && (
+              <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${downloadStatus.progress}%` }}
+                />
+              </div>
+            )}
+          </div>
         </motion.div>
       )}
 

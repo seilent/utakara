@@ -3,13 +3,13 @@ import { NextResponse, NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const { pathname } = new URL(request.url);
   
-  // Skip middleware for public routes and API routes
-  if (pathname.startsWith('/api/') || pathname === '/login') {
+  // Skip middleware for public routes and API routes except retry
+  if ((pathname.startsWith('/api/') && !pathname.includes('/audio/retry')) || pathname === '/login') {
     return NextResponse.next();
   }
 
-  // Only check auth for admin routes
-  if (pathname.startsWith('/admin')) {
+  // Check auth for admin routes and retry endpoint
+  if (pathname.startsWith('/admin') || pathname.includes('/audio/retry')) {
     const sessionToken = request.cookies.get('next-auth.session-token') || 
                         request.cookies.get('__Secure-next-auth.session-token');
                         

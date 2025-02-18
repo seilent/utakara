@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import { join } from 'path';
-import { clearDownloadStatus } from './audio-status';
+import { clearDownloadStatus, updateDownloadStatus } from './audio-status';
 import Database from 'better-sqlite3';
 import { audioLogger } from './audio-logger';
 
@@ -14,7 +14,7 @@ export async function cleanupUnusedAudio() {
     const db = new Database('songs.db');
     
     const files = await fs.readdir(MUSIC_DIR);
-    const audioFiles = files.filter(f => f.endsWith('.opus'));
+    const audioFiles = files.filter(f => /\.(opus|webm|m4a|mp3)$/i.test(f));
     
     audioLogger.info(`Found ${audioFiles.length} audio files to check`);
 
@@ -24,11 +24,12 @@ export async function cleanupUnusedAudio() {
         if (isNaN(songId)) continue;
 
         const song = db.prepare('SELECT id FROM songs WHERE id = ?').get(songId);
-        if (!song) {
-          await fs.unlink(join(MUSIC_DIR, file));
+        
+        // For files with valid songs, ensure status is "ready"
+        if (song) {
           await clearDownloadStatus(songId);
-          audioLogger.info(`Cleaned up unused audio file for non-existent song ${songId}`, songId);
-        } else {
+          await updateDownloadStatus(songId, { status: 'ready' });
+          
           const stats = await fs.stat(join(MUSIC_DIR, file));
           const age = Date.now() - stats.mtimeMs;
           
@@ -37,6 +38,11 @@ export async function cleanupUnusedAudio() {
             await clearDownloadStatus(songId);
             audioLogger.info(`Cleaned up old audio file for song ${songId} (age: ${Math.floor(age/86400000)} days)`, songId);
           }
+        } else {
+          // Clean up files for non-existent songs
+          await fs.unlink(join(MUSIC_DIR, file));
+          await clearDownloadStatus(songId);
+          audioLogger.info(`Cleaned up unused audio file for non-existent song ${songId}`, songId);
         }
       } catch (error) {
         audioLogger.error(`Error cleaning up file ${file}`, undefined, error as Error);
@@ -51,7 +57,9 @@ export async function cleanupUnusedAudio() {
 }
 
 export function startCleanupJob() {
-  audioLogger.info('Starting cleanup job scheduler');
+  // Run initial cleanup
   cleanupUnusedAudio();
+  
+  // Schedule periodic cleanup
   setInterval(cleanupUnusedAudio, CLEANUP_INTERVAL);
 }

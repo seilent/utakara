@@ -100,21 +100,35 @@ export default function SongPage({ params }: PageProps) {
 
   // Effect for checking audio availability
   useEffect(() => {
-    const checkAudio = async () => {
+    const checkAudioAndUpdateStatus = async () => {
+      if (!id) return;
+      
       try {
-        const response = await fetch(`/api/songs/${id}/exists`);
-        const data = await response.json();
-        setHasAudio(data.exists);
-        console.log('Audio exists:', data.exists); // Debugger statement
+        // First check if the file actually exists
+        const existsResponse = await fetch(`/api/songs/${id}/exists`);
+        const existsData = await existsResponse.json();
+        
+        if (existsData.exists) {
+          // If file exists but status shows error, post to retry endpoint to fix the state
+          const statusResponse = await fetch(`/api/songs/${id}/audio/status`);
+          const statusData = await statusResponse.json();
+          
+          if (statusData.status === 'error') {
+            // This will reset the status to 'ready' since the file exists
+            await fetch(`/api/songs/${id}/audio/status`, { method: 'POST' });
+          }
+          
+          setHasAudio(true);
+        } else {
+          setHasAudio(false);
+        }
       } catch (error) {
         console.error('Error checking audio status:', error);
         setHasAudio(false);
       }
     };
-    
-    if (id) {
-      checkAudio();
-    }
+
+    checkAudioAndUpdateStatus();
   }, [id]);
 
   // Effect for fetching song data

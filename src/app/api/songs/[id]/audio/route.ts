@@ -1,6 +1,3 @@
-/* eslint-disable */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 import { NextRequest } from 'next/server';
 import { createReadStream, statSync } from 'fs';
 import path from 'path';

@@ -18,6 +18,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState<{ status: string; progress?: number } | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -64,6 +65,7 @@ export default function AdminPage() {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+    setDownloadStatus(null);
 
     try {
       if (!formData.titleJapanese || !formData.titleEnglish || 
@@ -77,7 +79,6 @@ export default function AdminPage() {
         formDataToSend.append(key, value);
       });
       
-      // Add the original file directly without cropping
       const file = fileInputRef.current?.files?.[0];
       if (file) {
         formDataToSend.append('artwork', file);
@@ -94,7 +95,27 @@ export default function AdminPage() {
         throw new Error(data.error || 'Failed to save song');
       }
 
-      router.push(`/songs/${data.songId}`);
+      // Start polling for download status
+      const songId = data.songId;
+      let isDownloading = true;
+      
+      while (isDownloading) {
+        const statusResponse = await fetch(`/api/songs/${songId}/audio/status`);
+        const statusData = await statusResponse.json();
+        
+        setDownloadStatus(statusData);
+        
+        if (statusData.status === 'ready') {
+          isDownloading = false;
+          router.push(`/songs/${songId}`);
+        } else if (statusData.status === 'error') {
+          throw new Error(`Audio download failed: ${statusData.error?.message || 'Unknown error'}`);
+        } else {
+          // Wait 1 second before checking again
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
@@ -156,6 +177,33 @@ export default function AdminPage() {
           className="mb-4 p-4 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded"
         >
           {error}
+        </motion.div>
+      )}
+
+      {downloadStatus && downloadStatus.status !== 'ready' && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 p-4 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded"
+        >
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <span className="capitalize">
+                {downloadStatus.status === 'pending' ? 'Preparing download...' : 'Downloading audio...'}
+              </span>
+              {downloadStatus.progress && (
+                <span>{Math.round(downloadStatus.progress)}%</span>
+              )}
+            </div>
+            {downloadStatus.progress && (
+              <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${downloadStatus.progress}%` }}
+                />
+              </div>
+            )}
+          </div>
         </motion.div>
       )}
 
