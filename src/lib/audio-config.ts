@@ -1,9 +1,11 @@
 import path from 'path';
+import { platform } from 'os';
 
 export type AudioStorageType = 'local' | 'proxy';
 
-export const FFMPEG_PATH = path.join(process.cwd(), 'bin', 'ffmpeg.exe');
-export const FFPROBE_PATH = path.join(process.cwd(), 'bin', 'ffprobe.exe');
+const ext = platform() === 'win32' ? '.exe' : '';
+export const FFMPEG_PATH = path.join(process.cwd(), 'bin', `ffmpeg${ext}`);
+export const FFPROBE_PATH = path.join(process.cwd(), 'bin', `ffprobe${ext}`);
 
 interface AudioConfig {
   storageType: AudioStorageType;
