@@ -24,7 +24,11 @@ async function convertToAAC(inputPath: string, outputPath: string): Promise<void
     const baseConversion = ffmpeg(inputPath)
       .audioFrequency(44100)
       .audioChannels(2)
-      .audioBitrate('192k');
+      .audioBitrate('192k')
+      // Add loudness normalization filter
+      .audioFilters([
+        'loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json'  // Standard loudness normalization settings
+      ]);
 
     // First attempt with libfdk_aac (better quality)
     baseConversion.clone()
