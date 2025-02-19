@@ -13,8 +13,68 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const pathParts = url.pathname.split('/').filter(Boolean);
-    const songId = parseInt(pathParts[pathParts.length - 1], 10);
     
+    // Check if this is a karaoke request
+    const isKaraoke = pathParts.includes('karaoke');
+    const songId = parseInt(pathParts[pathParts.length - (isKaraoke ? 2 : 1)], 10);
+
+    if (isKaraoke) {
+      const id = await Promise.resolve(songId);
+      const karaokeFile = path.join(process.cwd(), 'music', 'karaoke', `${id}.aac`);
+      
+      try {
+        await fs.promises.access(karaokeFile);
+      } catch {
+        return new Response('Audio file not found', { 
+          status: 404,
+          headers: { 'Content-Type': 'text/plain' }
+        });
+      }
+
+      const stat = await fs.promises.stat(karaokeFile);
+      const fileSize = stat.size;
+
+      const rangeHeader = request.headers.get('range');
+      if (rangeHeader) {
+        const parts = rangeHeader.replace(/bytes=/, '').split('-');
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + CHUNK_SIZE, fileSize - 1);
+        const chunkSize = end - start + 1;
+        const file = await fs.promises.open(karaokeFile, 'r');
+        const buffer = Buffer.alloc(chunkSize);
+        await file.read(buffer, 0, chunkSize, start);
+        await file.close();
+
+        return new Response(buffer, {
+          status: 206,
+          headers: {
+            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunkSize.toString(),
+            'Content-Type': 'audio/aac',
+            'Cache-Control': 'public, max-age=3600'
+          }
+        });
+      }
+
+      // For initial request
+      const initialChunkSize = Math.min(CHUNK_SIZE, fileSize);
+      const buffer = Buffer.alloc(initialChunkSize);
+      const file = await fs.promises.open(karaokeFile, 'r');
+      await file.read(buffer, 0, initialChunkSize, 0);
+      await file.close();
+
+      return new Response(buffer, {
+        headers: {
+          'Content-Type': 'audio/aac',
+          'Content-Length': fileSize.toString(),
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=3600'
+        }
+      });
+    }
+
+    // Original audio handling
     const audioFileName = await findAudioFile(songId);
     if (!audioFileName) {
       return new Response('Audio file not found', { 

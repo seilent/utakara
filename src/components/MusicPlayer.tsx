@@ -151,6 +151,8 @@ const ParticleBackground = ({ colors, analyser }: {
 
 interface MusicPlayerProps {
   audioUrl: string;
+  karaokeUrl: string;  // Add this prop
+  isKaraokeMode: boolean;  // Add this prop
   songId: string | number;
   artwork: string;
   colors: {
@@ -167,6 +169,7 @@ interface MusicPlayerProps {
     japanese: string;
     english: string;
   };
+  hasKaraoke?: boolean;  // Add this new prop
 }
 
 interface BottomBarPlayerProps extends Omit<MusicPlayerProps, 'hasAudio'> {
@@ -348,7 +351,7 @@ const BottomBarPlayer = ({
   );
 };
 
-const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artist }: MusicPlayerProps) => {
+const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, colors, hasAudio, hasKaraoke, title, artist }: MusicPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -360,18 +363,20 @@ const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artis
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const bufferingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const mainAudioRef = useRef<HTMLAudioElement>(null);
+  const karaokeAudioRef = useRef<HTMLAudioElement>(null);
+  const prevKaraokeModeRef = useRef(isKaraokeMode);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
 
   useEffect(() => {
     // Initialize Web Audio API
     const initAudio = () => {
-      if (!audioRef.current || audioContextRef.current) return;
+      if (!mainAudioRef.current || audioContextRef.current) return;
 
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       const audioContext = new AudioContextClass();
-      const source = audioContext.createMediaElementSource(audioRef.current);
+      const source = audioContext.createMediaElementSource(mainAudioRef.current);
       const analyser = audioContext.createAnalyser();
       
       analyser.fftSize = 256;
@@ -382,7 +387,7 @@ const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artis
       analyserRef.current = analyser;
     };
 
-    const audio = audioRef.current;
+    const audio = mainAudioRef.current;
     const handlePlay = () => {
       if (!audioContextRef.current) {
         initAudio();
@@ -404,7 +409,7 @@ const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artis
   }, []);
 
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = mainAudioRef.current;
     if (!audio) return;
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
@@ -437,14 +442,14 @@ const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artis
 
   // Add preload initialization
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.preload = "auto";
+    if (mainAudioRef.current) {
+      mainAudioRef.current.preload = "auto";
     }
   }, [audioUrl]);
 
   // Enhanced buffering detection
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = mainAudioRef.current;
     if (!audio) return;
 
     const handleProgress = () => {
@@ -497,43 +502,112 @@ const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artis
     };
   }, [isBuffering]);
 
-  const togglePlay = async () => {
-    if (!audioRef.current) return;
+  // Initialize audio elements
+  useEffect(() => {
+    if (!mainAudioRef.current || !hasAudio) return;
+
+    const mainAudio = mainAudioRef.current;
+    const karaokeAudio = karaokeAudioRef.current;
     
+    // Set initial active audio
+    const activeAudio = isKaraokeMode && karaokeAudio ? karaokeAudio : mainAudio;
+
+    const syncAudio = (fromAudio: HTMLAudioElement, toAudio: HTMLAudioElement) => {
+      toAudio.currentTime = fromAudio.currentTime;
+      if (!fromAudio.paused) {
+        const playPromise = toAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => console.error('Error playing synced audio:', error));
+        }
+      } else {
+        toAudio.pause();
+      }
+    };
+
+    // Sync time between both audio elements
+    const handleTimeUpdate = () => {
+      if (karaokeAudio && Math.abs(mainAudio.currentTime - karaokeAudio.currentTime) > 0.1) {
+        const activeAudio = isKaraokeMode ? karaokeAudio : mainAudio;
+        const inactiveAudio = activeAudio === mainAudio ? karaokeAudio : mainAudio;
+        syncAudio(activeAudio, inactiveAudio);
+      }
+    };
+
+    mainAudio.addEventListener('timeupdate', handleTimeUpdate);
+    if (karaokeAudio) {
+      karaokeAudio.addEventListener('timeupdate', handleTimeUpdate);
+    }
+
+    return () => {
+      mainAudio.removeEventListener('timeupdate', handleTimeUpdate);
+      if (karaokeAudio) {
+        karaokeAudio.removeEventListener('timeupdate', handleTimeUpdate);
+      }
+    };
+  }, [hasAudio, isKaraokeMode]);
+
+  // Update the audio switching logic
+  useEffect(() => {
+    if (!mainAudioRef.current || !karaokeAudioRef.current) return;
+
+    const mainAudio = mainAudioRef.current;
+    const karaokeAudio = karaokeAudioRef.current;
+    const currentTime = mainAudio.currentTime;
+    const wasPlaying = !mainAudio.paused;
+
+    // Prepare both audios
+    mainAudio.volume = isKaraokeMode ? 0 : volume;
+    karaokeAudio.volume = isKaraokeMode ? volume : 0;
+    mainAudio.currentTime = currentTime;
+    karaokeAudio.currentTime = currentTime;
+
+    // Handle playback
+    if (wasPlaying) {
+      const playActiveAudio = async () => {
+        try {
+          if (isKaraokeMode) {
+            mainAudio.pause();
+            await karaokeAudio.play();
+          } else {
+            karaokeAudio.pause();
+            await mainAudio.play();
+          }
+        } catch (error) {
+          console.error('Error switching audio:', error);
+        }
+      };
+      playActiveAudio();
+    } else {
+      mainAudio.pause();
+      karaokeAudio.pause();
+    }
+  }, [isKaraokeMode, volume]);
+
+  // Handle volume changes
+  useEffect(() => {
+    if (mainAudioRef.current) mainAudioRef.current.volume = volume;
+    if (karaokeAudioRef.current) karaokeAudioRef.current.volume = volume;
+  }, [volume]);
+
+  const togglePlay = async () => {
+    const mainAudio = mainAudioRef.current;
+    const karaokeAudio = karaokeAudioRef.current;
+    if (!mainAudio || (hasKaraoke && !karaokeAudio)) return;
+
+    const targetAudio = isKaraokeMode ? karaokeAudio! : mainAudio;
+
     if (!hasStartedPlaying) {
       setHasStartedPlaying(true);
     }
-    
+
     if (isPlaying) {
-      audioRef.current.pause();
+      mainAudio.pause();
+      if (karaokeAudio) karaokeAudio.pause();
       setIsPlaying(false);
     } else {
       setIsLoading(true);
       try {
-        // Start loading the audio
-        if (audioRef.current.readyState < 2) { // HAVE_CURRENT_DATA
-          await new Promise((resolve, reject) => {
-            const handleCanPlay = () => {
-              audioRef.current?.removeEventListener('canplay', handleCanPlay);
-              audioRef.current?.removeEventListener('error', handleError);
-              resolve(null);
-            };
-            
-            const handleError = (e: Event) => {
-              audioRef.current?.removeEventListener('canplay', handleCanPlay);
-              audioRef.current?.removeEventListener('error', handleError);
-              reject(e);
-            };
-
-            audioRef.current?.addEventListener('canplay', handleCanPlay);
-            audioRef.current?.addEventListener('error', handleError);
-            if (audioRef.current) {
-              audioRef.current.load();
-            }
-          });
-        }
-
-        await audioRef.current.play();
+        await targetAudio.play();
         setIsPlaying(true);
       } catch (err) {
         console.error('Error playing audio:', err);
@@ -546,42 +620,39 @@ const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artis
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
     localStorage.setItem('audioVolume', newVolume.toString());
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
+    if (mainAudioRef.current && karaokeAudioRef.current) {
+      const mainAudio = mainAudioRef.current;
+      const karaokeAudio = karaokeAudioRef.current;
+      mainAudio.volume = isKaraokeMode ? 0 : newVolume;
+      karaokeAudio.volume = isKaraokeMode ? newVolume : 0;
     }
   };
 
   // Initialize volume from localStorage when audio element is created
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
+    if (mainAudioRef.current) {
+      mainAudioRef.current.volume = volume;
     }
   }, [volume]);
 
   const handleSeek = (time: number) => {
-    if (!audioRef.current || !audioRef.current.seekable) return;
+    if (!mainAudioRef.current || !karaokeAudioRef.current) return;
 
-    const wasPlaying = !audioRef.current.paused;
+    const mainAudio = mainAudioRef.current;
+    const karaokeAudio = karaokeAudioRef.current;
+    const wasPlaying = !mainAudio.paused;
+
     setCurrentTime(time);
+    mainAudio.currentTime = time;
+    karaokeAudio.currentTime = time;
 
-    // Check if the time is within seekable ranges
-    for (let i = 0; i < audioRef.current.seekable.length; i++) {
-      if (time >= audioRef.current.seekable.start(i) && time <= audioRef.current.seekable.end(i)) {
-        if (wasPlaying) {
-          audioRef.current.pause();
-        }
-        
-        audioRef.current.currentTime = time;
-        
-        if (wasPlaying) {
-          const playPromise = audioRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(error => {
-              console.error('Error after seeking:', error);
-            });
-          }
-        }
-        break;
+    if (wasPlaying) {
+      const activeAudio = isKaraokeMode ? karaokeAudio : mainAudio;
+      const playPromise = activeAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('Error after seeking:', error);
+        });
       }
     }
   };
@@ -590,7 +661,10 @@ const MusicPlayer = ({ audioUrl, songId, artwork, colors, hasAudio, title, artis
 
   return (
     <>
-      <audio ref={audioRef} src={audioUrl} preload="metadata" />
+      <audio ref={mainAudioRef} src={audioUrl} preload="metadata" />
+      {hasKaraoke && (
+        <audio ref={karaokeAudioRef} src={karaokeUrl} preload="auto" />
+      )}
       
       {/* Simple Play Overlay on Artwork */}
       <div 

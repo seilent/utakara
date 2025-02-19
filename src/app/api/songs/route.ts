@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import fs, { mkdir, writeFile, unlink } from 'fs/promises';
+import path, { join } from 'path';
 import { insertSong } from '@/lib/db';
 import Database from 'better-sqlite3';
 import { revalidateTag } from 'next/cache';
 import { deleteAudio } from '@/lib/audio';
 import { downloadQueue } from '@/lib/download-queue';
+import ffmpeg from '@/lib/ffmpeg';
 
 interface DbSong {
   id: number;
@@ -15,6 +16,40 @@ interface DbSong {
 
 function getDb() {
   return new Database(path.join(process.cwd(), 'songs.db'));
+}
+
+async function convertToAAC(inputPath: string, outputPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Try with libfdk_aac first (better quality)
+    const baseConversion = ffmpeg(inputPath)
+      .audioFrequency(44100)
+      .audioChannels(2)
+      .audioBitrate('192k');
+
+    // First attempt with libfdk_aac (better quality)
+    baseConversion.clone()
+      .audioCodec('libfdk_aac')
+      .toFormat('ipod')  // AAC container
+      .addOutputOption('-profile:a', 'aac_low')  // High compatibility
+      .addOutputOption('-q:a', '4')  // VBR quality setting for libfdk_aac
+      .on('error', (err) => {
+        if (err.message.includes('libfdk_aac')) {
+          // Fallback to native AAC encoder with good settings
+          baseConversion.clone()
+            .audioCodec('aac')
+            .toFormat('ipod')
+            .addOutputOption('-strict', '-2')  // Allow experimental codecs
+            .addOutputOption('-b:a', '192k')   // Constant bitrate as VBR isn't as good with native AAC
+            .on('error', reject)
+            .on('end', resolve)
+            .save(outputPath);
+        } else {
+          reject(err);
+        }
+      })
+      .on('end', resolve)
+      .save(outputPath);
+  });
 }
 
 export async function POST(request: Request) {
@@ -66,6 +101,32 @@ export async function POST(request: Request) {
       lyrics_romaji: romaji,
       youtube_url: youtubeUrl || null,
     });
+
+    // Handle karaoke file if provided
+    const karaokeFile = data.get('karaokeFile') as File;
+    if (karaokeFile) {
+      const karaokeDir = join(process.cwd(), 'music', 'karaoke');
+      await mkdir(karaokeDir, { recursive: true });
+      
+      const tempPath = join(karaokeDir, `temp_${id}_${karaokeFile.name}`);
+      const finalPath = join(karaokeDir, `${id}.aac`);
+      
+      // Save uploaded file
+      const karaokeBuffer = Buffer.from(await karaokeFile.arrayBuffer());
+      await writeFile(tempPath, karaokeBuffer);
+      
+      // Convert to AAC using the new function
+      try {
+        await convertToAAC(tempPath, finalPath);
+      } finally {
+        // Always try to delete temp file
+        try {
+          await unlink(tempPath);
+        } catch {
+          // Ignore error if temp file doesn't exist
+        }
+      }
+    }
 
     // Revalidate the uploads directory
     revalidateTag('uploads');
@@ -119,6 +180,12 @@ export async function DELETE(request: Request) {
 
     // Delete the song record from database
     db.prepare('DELETE FROM songs WHERE id = ?').run(songId);
+
+    // Also delete karaoke file if exists
+    const karaokeFile = join(process.cwd(), 'music', 'karaoke', `${id}.aac`);
+    if (fs.existsSync(karaokeFile)) {
+      await unlink(karaokeFile);
+    }
 
     // Revalidate after deletion
     revalidateTag('uploads');
@@ -187,6 +254,29 @@ export async function PUT(request: Request) {
     const newYoutubeUrl = youtubeUrl || null;
     if (existingSong && existingSong.youtube_url !== newYoutubeUrl) {
       await deleteAudio(songId);
+    }
+
+    // Handle karaoke file if provided
+    const karaokeFile = data.get('karaokeFile') as File;
+    if (karaokeFile) {
+      const karaokeDir = join(process.cwd(), 'music', 'karaoke');
+      await mkdir(karaokeDir, { recursive: true });
+      
+      const tempPath = join(karaokeDir, `temp_${songId}_${karaokeFile.name}`);
+      const finalPath = join(karaokeDir, `${songId}.aac`);
+      
+      const karaokeBuffer = Buffer.from(await karaokeFile.arrayBuffer());
+      await writeFile(tempPath, karaokeBuffer);
+      
+      try {
+        await convertToAAC(tempPath, finalPath);
+      } finally {
+        try {
+          await unlink(tempPath);
+        } catch {
+          // Ignore error if temp file doesn't exist
+        }
+      }
     }
 
     // Update the database

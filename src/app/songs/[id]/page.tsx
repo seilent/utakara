@@ -88,6 +88,8 @@ export default function SongPage({ params }: PageProps) {
   const [song, setSong] = useState<Song | null>(null);
   const [showRomaji, setShowRomaji] = useState(true);
   const [hasAudio, setHasAudio] = useState(false);
+  const [hasKaraoke, setHasKaraoke] = useState(false);
+  const [isKaraokeMode, setIsKaraokeMode] = useState(false);
   const [colors, setColors] = useState<{
     primary: string;
     secondary: string;
@@ -98,29 +100,29 @@ export default function SongPage({ params }: PageProps) {
     text: 'rgb(255 255 255)'
   });
 
-  // Effect for checking audio availability
+  // Effect for checking audio and karaoke availability
   useEffect(() => {
     const checkAudioAndUpdateStatus = async () => {
       if (!id) return;
       
       try {
-        // First check if the file actually exists
+        // Check original audio
         const existsResponse = await fetch(`/api/songs/${id}/exists`);
         const existsData = await existsResponse.json();
+        setHasAudio(existsData.exists);
+
+        // Check karaoke version
+        const karaokeResponse = await fetch(`/api/songs/${id}/karaoke/exists`);
+        const karaokeData = await karaokeResponse.json();
+        setHasKaraoke(karaokeData.exists);
         
         if (existsData.exists) {
-          // If file exists but status shows error, post to retry endpoint to fix the state
           const statusResponse = await fetch(`/api/songs/${id}/audio/status`);
           const statusData = await statusResponse.json();
           
           if (statusData.status === 'error') {
-            // This will reset the status to 'ready' since the file exists
             await fetch(`/api/songs/${id}/audio/status`, { method: 'POST' });
           }
-          
-          setHasAudio(true);
-        } else {
-          setHasAudio(false);
         }
       } catch (error) {
         console.error('Error checking audio status:', error);
@@ -219,11 +221,14 @@ export default function SongPage({ params }: PageProps) {
               />
               {hasAudio && (
                 <MusicPlayer
-                  audioUrl={`/api/music/${id}`}
+                  audioUrl={`/api/music/${id}`}  // Pass base URL only
+                  karaokeUrl={`/api/music/${id}/karaoke`}  // Pass karaoke URL
+                  isKaraokeMode={isKaraokeMode}  // Pass as prop instead of constructing URL
                   songId={id}
                   artwork={song.artwork}
                   colors={colors}
                   hasAudio={hasAudio}
+                  hasKaraoke={hasKaraoke}
                   title={song.title}
                   artist={song.artist}
                 />
@@ -262,6 +267,20 @@ export default function SongPage({ params }: PageProps) {
                     <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                   </svg>
                 </Link>
+                {hasKaraoke && (
+                  <button
+                    onClick={() => setIsKaraokeMode(!isKaraokeMode)}
+                    className="w-12 h-12 rounded-lg transition-colors flex items-center justify-center bg-black/20 hover:bg-black/30"
+                    style={{ color: colors.text }}
+                    aria-label={isKaraokeMode ? 'Switch to Original' : 'Switch to Karaoke'}
+                    title={isKaraokeMode ? 'Switch to Original' : 'Switch to Karaoke'}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                      <path d="M8.25 4.5a3.75 3.75 0 117.5 0v8.25a3.75 3.75 0 11-7.5 0V4.5z" />
+                      <path d="M6 10.5a.75.75 0 01.75.75v1.5a5.25 5.25 0 1010.5 0v-1.5a.75.75 0 011.5 0v1.5a6.751 6.751 0 01-6 6.709v2.291h3a.75.75 0 010 1.5h-7.5a.75.75 0 010-1.5h3v-2.291a6.751 6.751 0 01-6-6.709v-1.5A.75.75 0 016 10.5z" />
+                    </svg>
+                  </button>
+                )}
                 <button
                   onClick={() => setShowRomaji(!showRomaji)}
                   className="w-12 h-12 rounded-lg transition-colors flex items-center justify-center bg-black/20 hover:bg-black/30"

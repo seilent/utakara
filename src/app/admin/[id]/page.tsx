@@ -43,24 +43,27 @@ export default function EditSongPage({ params }: PageProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSearchingYoutube, setIsSearchingYoutube] = useState(false);
   const youtubeSearchTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [karaokeFile, setKaraokeFile] = useState<File | null>(null);
+  const [hasKaraoke, setHasKaraoke] = useState(false);
 
   useEffect(() => {
     // Fetch existing song data
-    fetch(`/api/songs/get?id=${id}`)
-      .then(res => res.json())
-      .then(data => {
-        setFormData({
-          titleJapanese: data.title.japanese,
-          titleEnglish: data.title.english,
-          artistJapanese: data.artist.japanese,
-          artistEnglish: data.artist.english,
-          lyrics: data.lyrics.japanese,
-          romaji: data.lyrics.romaji,
-          youtubeUrl: data.youtube_url || ''
-        });
-        setExistingImage(data.artwork);
-      })
-      .catch(err => setError(err.message));
+    Promise.all([
+      fetch(`/api/songs/get?id=${id}`).then(res => res.json()),
+      fetch(`/api/songs/${id}/karaoke/exists`).then(res => res.json())
+    ]).then(([songData, karaokeData]) => {
+      setFormData({
+        titleJapanese: songData.title.japanese,
+        titleEnglish: songData.title.english,
+        artistJapanese: songData.artist.japanese,
+        artistEnglish: songData.artist.english,
+        lyrics: songData.lyrics.japanese,
+        romaji: songData.lyrics.romaji,
+        youtubeUrl: songData.youtube_url || ''
+      });
+      setExistingImage(songData.artwork);
+      setHasKaraoke(karaokeData.exists);
+    }).catch(err => setError(err.message));
   }, [id]);
 
   useEffect(() => {
@@ -130,6 +133,13 @@ export default function EditSongPage({ params }: PageProps) {
     }
   };
 
+  const handleKaraokeFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setKaraokeFile(file);
+    }
+  };
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
@@ -181,6 +191,10 @@ export default function EditSongPage({ params }: PageProps) {
         if (file) {
           formDataToSend.append('artwork', file);
         }
+      }
+
+      if (karaokeFile) {
+        formDataToSend.append('karaokeFile', karaokeFile);
       }
 
       const response = await fetch('/api/songs', {
@@ -402,6 +416,28 @@ export default function EditSongPage({ params }: PageProps) {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="col-span-full">
+          <label className="block text-sm font-medium mb-1">Karaoke Version</label>
+          <div className="flex items-center gap-4">
+            <input
+              type="file"
+              onChange={handleKaraokeFileChange}
+              accept="audio/*"
+              className="flex-1 p-2 rounded border dark:bg-gray-800 dark:border-gray-700"
+            />
+            {hasKaraoke && !karaokeFile && (
+              <span className="text-sm text-green-500">
+                ✓ Karaoke version exists
+              </span>
+            )}
+          </div>
+          {karaokeFile && (
+            <p className="mt-1 text-sm text-gray-500">
+              Selected file: {karaokeFile.name}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

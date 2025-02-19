@@ -30,6 +30,7 @@ export default function AdminPage() {
     romaji: "",
     youtubeUrl: ""
   });
+  const [karaokeFile, setKaraokeFile] = useState<File | null>(null);
   const [isSearchingYoutube, setIsSearchingYoutube] = useState(false);
   const youtubeSearchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -54,6 +55,13 @@ export default function AdminPage() {
         setSelectedImage(event.target?.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleKaraokeFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setKaraokeFile(file);
     }
   };
 
@@ -82,6 +90,11 @@ export default function AdminPage() {
       const file = fileInputRef.current?.files?.[0];
       if (file) {
         formDataToSend.append('artwork', file);
+      }
+
+      // Add karaoke file to form data if selected
+      if (karaokeFile) {
+        formDataToSend.append('karaokeFile', karaokeFile);
       }
 
       const response = await fetch('/api/songs', {
@@ -320,6 +333,21 @@ export default function AdminPage() {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="col-span-full">
+          <label className="block text-sm font-medium mb-1">Karaoke Version (Optional)</label>
+          <input
+            type="file"
+            onChange={handleKaraokeFileChange}
+            accept="audio/*"
+            className="w-full p-2 rounded border dark:bg-gray-800 dark:border-gray-700"
+          />
+          {karaokeFile && (
+            <p className="mt-1 text-sm text-gray-500">
+              Selected file: {karaokeFile.name}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
