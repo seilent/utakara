@@ -370,42 +370,25 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
   const prevKaraokeModeRef = useRef(isKaraokeMode);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const mainAnalyserRef = useRef<AnalyserNode | null>(null);
-  const karaokeAnalyserRef = useRef<AnalyserNode | null>(null);
-  const mainDataArrayRef = useRef<Uint8Array | null>(null);
-  const karaokeDataArrayRef = useRef<Uint8Array | null>(null);
-  const volumeAdjustmentRef = useRef<number>(1);
-
-  // Initialize Web Audio API for both audio streams
-  const initAudio = () => {
-    if (!mainAudioRef.current || !karaokeAudioRef.current || audioContextRef.current) return;
-
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    const audioContext = new AudioContextClass();
-
-    // Set up main audio analysis
-    const mainSource = audioContext.createMediaElementSource(mainAudioRef.current);
-    const mainAnalyser = audioContext.createAnalyser();
-    mainAnalyser.fftSize = 2048;
-    mainSource.connect(mainAnalyser);
-    mainAnalyser.connect(audioContext.destination);
-    mainAnalyserRef.current = mainAnalyser;
-    mainDataArrayRef.current = new Uint8Array(mainAnalyser.frequencyBinCount);
-
-    // Set up karaoke audio analysis
-    const karaokeSource = audioContext.createMediaElementSource(karaokeAudioRef.current);
-    const karaokeAnalyser = audioContext.createAnalyser();
-    karaokeAnalyser.fftSize = 2048;
-    karaokeSource.connect(karaokeAnalyser);
-    karaokeAnalyser.connect(audioContext.destination);
-    karaokeAnalyserRef.current = karaokeAnalyser;
-    karaokeDataArrayRef.current = new Uint8Array(karaokeAnalyser.frequencyBinCount);
-    
-    audioContextRef.current = audioContext;
-    analyserRef.current = mainAnalyser;
-  };
 
   useEffect(() => {
+    // Initialize Web Audio API
+    const initAudio = () => {
+      if (!mainAudioRef.current || audioContextRef.current) return;
+
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const audioContext = new AudioContextClass();
+      const source = audioContext.createMediaElementSource(mainAudioRef.current);
+      const analyser = audioContext.createAnalyser();
+      
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      analyser.connect(audioContext.destination);
+      
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+    };
+
     const audio = mainAudioRef.current;
     const handlePlay = () => {
       if (!audioContextRef.current) {
@@ -565,68 +548,18 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
     };
   }, [hasAudio, isKaraokeMode]);
 
-  // Analyze and normalize loudness
-  useEffect(() => {
-    if (!isPlaying || !mainAnalyserRef.current || !karaokeAnalyserRef.current || 
-        !mainDataArrayRef.current || !karaokeDataArrayRef.current) return;
-
-    const analyzeBassEnergy = () => {
-      mainAnalyserRef.current!.getByteFrequencyData(mainDataArrayRef.current!);
-      karaokeAnalyserRef.current!.getByteFrequencyData(karaokeDataArrayRef.current!);
-
-      // Calculate average energy for frequencies under 75Hz
-      // With fftSize 2048, each bin represents ~21.5Hz (44100/2048)
-      // So we'll look at the first 4 bins (up to ~86Hz)
-      const mainBassEnergy = mainDataArrayRef.current!
-        .slice(0, 4)
-        .reduce((sum, val) => sum + val, 0) / 4;
-      
-      const karaokeBassEnergy = karaokeDataArrayRef.current!
-        .slice(0, 4)
-        .reduce((sum, val) => sum + val, 0) / 4;
-
-      // Calculate volume adjustment ratio with smoothing
-      if (mainBassEnergy > 0 && karaokeBassEnergy > 0) {
-        const targetRatio = Math.min(mainBassEnergy / karaokeBassEnergy, 2); // Cap the ratio at 2x
-        // Smooth the adjustment to avoid sudden volume changes
-        volumeAdjustmentRef.current = Math.min(1, volumeAdjustmentRef.current * 0.95 + targetRatio * 0.05);
-      }
-
-      // Apply volume adjustment with safety bounds
-      if (mainAudioRef.current && karaokeAudioRef.current) {
-        const baseVolume = Math.min(1, Math.max(0, volume)); // Ensure base volume is within [0, 1]
-        if (isKaraokeMode) {
-          mainAudioRef.current.volume = 0;
-          karaokeAudioRef.current.volume = Math.min(1, Math.max(0, baseVolume * volumeAdjustmentRef.current));
-        } else {
-          mainAudioRef.current.volume = baseVolume;
-          karaokeAudioRef.current.volume = 0;
-        }
-      }
-
-      requestAnimationFrame(analyzeBassEnergy);
-    };
-
-    const analyzeFrame = requestAnimationFrame(analyzeBassEnergy);
-    return () => cancelAnimationFrame(analyzeFrame);
-  }, [isPlaying, isKaraokeMode, volume]);
-
   // Update the audio switching logic
   useEffect(() => {
     if (!mainAudioRef.current || !karaokeAudioRef.current) return;
 
     const mainAudio = mainAudioRef.current;
     const karaokeAudio = karaokeAudioRef.current;
-    
-    // Initialize base volumes
-    const baseVolume = volume;
-    mainAudio.volume = isKaraokeMode ? 0 : baseVolume;
-    karaokeAudio.volume = isKaraokeMode ? baseVolume * volumeAdjustmentRef.current : 0;
-
     const currentTime = mainAudio.currentTime;
     const wasPlaying = !mainAudio.paused;
 
-    // Sync timestamps
+    // Use muted property instead of volume for switching
+    mainAudio.muted = isKaraokeMode;
+    karaokeAudio.muted = !isKaraokeMode;
     mainAudio.currentTime = currentTime;
     karaokeAudio.currentTime = currentTime;
 
@@ -654,50 +587,9 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
 
   // Handle volume changes
   useEffect(() => {
+    // Apply volume to both tracks
     if (mainAudioRef.current) mainAudioRef.current.volume = volume;
     if (karaokeAudioRef.current) karaokeAudioRef.current.volume = volume;
-  }, [volume]);
-
-  // Initialize audio elements with correct volume
-  useEffect(() => {
-    const mainAudio = mainAudioRef.current;
-    const karaokeAudio = karaokeAudioRef.current;
-    
-    if (!mainAudio) return;
-
-    // Set initial volumes
-    mainAudio.volume = isKaraokeMode ? 0 : volume;
-    if (karaokeAudio) {
-      karaokeAudio.volume = isKaraokeMode ? volume : 0;
-    }
-  }, [isKaraokeMode, volume]);
-
-  // Initialize volume from localStorage and set up audio context
-  useEffect(() => {
-    if (!mainAudioRef.current) return;
-    
-    const mainAudio = mainAudioRef.current;
-    mainAudio.volume = volume;
-
-    const audio = mainAudioRef.current;
-    const handlePlay = () => {
-      if (!audioContextRef.current) {
-        initAudio();
-      }
-    };
-
-    if (audio) {
-      audio.addEventListener('play', handlePlay);
-    }
-
-    return () => {
-      if (audio) {
-        audio.removeEventListener('play', handlePlay);
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-    };
   }, [volume]);
 
   const togglePlay = async () => {
@@ -705,13 +597,10 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
     const karaokeAudio = karaokeAudioRef.current;
     if (!mainAudio || (hasKaraoke && !karaokeAudio)) return;
 
+    const targetAudio = isKaraokeMode ? karaokeAudio! : mainAudio;
+
     if (!hasStartedPlaying) {
       setHasStartedPlaying(true);
-      // Set initial volumes
-      mainAudio.volume = isKaraokeMode ? 0 : volume;
-      if (karaokeAudio) {
-        karaokeAudio.volume = isKaraokeMode ? volume : 0;
-      }
     }
 
     if (isPlaying) {
@@ -721,8 +610,6 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
     } else {
       setIsLoading(true);
       try {
-        // Only play the active audio source
-        const targetAudio = isKaraokeMode ? karaokeAudio! : mainAudio;
         await targetAudio.play();
         setIsPlaying(true);
       } catch (err) {
@@ -736,12 +623,9 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
     localStorage.setItem('audioVolume', newVolume.toString());
-    if (mainAudioRef.current && karaokeAudioRef.current) {
-      const mainAudio = mainAudioRef.current;
-      const karaokeAudio = karaokeAudioRef.current;
-      mainAudio.volume = isKaraokeMode ? 0 : newVolume;
-      karaokeAudio.volume = isKaraokeMode ? newVolume : 0;
-    }
+    // Apply volume to both tracks
+    if (mainAudioRef.current) mainAudioRef.current.volume = newVolume;
+    if (karaokeAudioRef.current) karaokeAudioRef.current.volume = newVolume;
   };
 
   // Initialize volume from localStorage when audio element is created
@@ -749,7 +633,7 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
     if (mainAudioRef.current) {
       mainAudioRef.current.volume = volume;
     }
-  }, [mainAudioRef.current, volume]);
+  }, [volume]);
 
   const handleSeek = (time: number) => {
     if (!mainAudioRef.current || !karaokeAudioRef.current) return;
