@@ -673,11 +673,11 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
   if (!hasAudio) return null;
 
   return (
-    <>
+    <div>
       <audio ref={mainAudioRef} src={audioUrl} preload="metadata" />
-      {hasKaraoke && (
+      {hasKaraoke && 
         <audio ref={karaokeAudioRef} src={karaokeUrl} preload="auto" />
-      )}
+      }
       
       {/* Simple Play Overlay on Artwork */}
       <div 
@@ -728,7 +728,7 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
           onSeek={handleSeek}
         />
       )}
-    </>
+    </div>
   );
 };
 

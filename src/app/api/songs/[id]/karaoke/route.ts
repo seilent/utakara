@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const id = await Promise.resolve(params.id);
-    const karaokeFile = join(process.cwd(), 'music', 'karaoke', `${id}.aac`);
+    const karaokeFile = join(process.cwd(), 'music', 'karaoke', `${id}.m4a`);
     
     if (!fs.existsSync(karaokeFile)) {
       console.error('Karaoke file not found:', karaokeFile);
@@ -18,7 +18,7 @@ export async function GET(
 
     const stream = fs.createReadStream(karaokeFile);
     const headers = new Headers({
-      'Content-Type': 'audio/aac',
+      'Content-Type': 'audio/mp4',
       'Accept-Ranges': 'bytes',
       'Content-Length': fs.statSync(karaokeFile).size.toString()
     });

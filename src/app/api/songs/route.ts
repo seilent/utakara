@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import fs, { mkdir, writeFile, unlink } from 'fs/promises';
+import { existsSync } from 'fs';  // Import existsSync from fs, not fs/promises
 import path, { join } from 'path';
 import { insertSong } from '@/lib/db';
 import Database from 'better-sqlite3';
@@ -58,17 +59,19 @@ async function convertToAAC(inputPath: string, outputPath: string): Promise<void
       // Attempt conversion using libfdk_aac first
       baseConversion.clone()
         .audioCodec('libfdk_aac')
-        .toFormat('ipod')
+        .toFormat('mp4')  // Use mp4 container format
         .addOutputOption('-profile:a', 'aac_low')
         .addOutputOption('-q:a', '4')
+        .addOutputOption('-movflags', '+faststart')  // Enable streaming
         .on('error', (err: Error) => {
           if (err.message.includes('libfdk_aac')) {
             // Fallback to native AAC encoder
             baseConversion.clone()
               .audioCodec('aac')
-              .toFormat('ipod')
+              .toFormat('mp4')  // Use mp4 container format 
               .addOutputOption('-strict', '-2')
               .addOutputOption('-b:a', '192k')
+              .addOutputOption('-movflags', '+faststart')  // Enable streaming
               .on('error', reject)
               .on('end', resolve)
               .save(outputPath);
@@ -141,7 +144,7 @@ export async function POST(request: Request) {
       await mkdir(karaokeDir, { recursive: true });
       
       const tempPath = join(karaokeDir, `temp_${id}_${karaokeFile.name}`);
-      const finalPath = join(karaokeDir, `${id}.aac`);
+      const finalPath = join(karaokeDir, `${id}.m4a`);
       
       // Save uploaded file
       const karaokeBuffer = Buffer.from(await karaokeFile.arrayBuffer());
@@ -214,8 +217,8 @@ export async function DELETE(request: Request) {
     db.prepare('DELETE FROM songs WHERE id = ?').run(songId);
 
     // Also delete karaoke file if exists
-    const karaokeFile = join(process.cwd(), 'music', 'karaoke', `${id}.aac`);
-    if (fs.existsSync(karaokeFile)) {
+    const karaokeFile = join(process.cwd(), 'music', 'karaoke', `${id}.m4a`);
+    if (existsSync(karaokeFile)) {  // Use imported existsSync
       await unlink(karaokeFile);
     }
 
@@ -295,7 +298,7 @@ export async function PUT(request: Request) {
       await mkdir(karaokeDir, { recursive: true });
       
       const tempPath = join(karaokeDir, `temp_${songId}_${karaokeFile.name}`);
-      const finalPath = join(karaokeDir, `${songId}.aac`);
+      const finalPath = join(karaokeDir, `${songId}.m4a`);
       
       const karaokeBuffer = Buffer.from(await karaokeFile.arrayBuffer());
       await writeFile(tempPath, karaokeBuffer);

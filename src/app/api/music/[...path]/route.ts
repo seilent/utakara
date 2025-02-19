@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
     if (isKaraoke) {
       const id = await Promise.resolve(songId);
-      const karaokeFile = path.join(process.cwd(), 'music', 'karaoke', `${id}.aac`);
+      const karaokeFile = path.join(process.cwd(), 'music', 'karaoke', `${id}.m4a`);
       
       try {
         await fs.promises.access(karaokeFile);
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
             'Content-Range': `bytes ${start}-${end}/${fileSize}`,
             'Accept-Ranges': 'bytes',
             'Content-Length': chunkSize.toString(),
-            'Content-Type': 'audio/aac',
+            'Content-Type': 'audio/mp4',
             'Cache-Control': 'public, max-age=3600'
           }
         });
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
 
       return new Response(buffer, {
         headers: {
-          'Content-Type': 'audio/aac',
+          'Content-Type': 'audio/mp4',
           'Content-Length': fileSize.toString(),
           'Accept-Ranges': 'bytes',
           'Cache-Control': 'public, max-age=3600'

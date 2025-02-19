@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const id = await Promise.resolve(params.id);
-    const karaokeFile = join(process.cwd(), 'music', 'karaoke', `${id}.aac`);
+    const karaokeFile = join(process.cwd(), 'music', 'karaoke', `${id}.m4a`);
     const exists = fs.existsSync(karaokeFile);
     
     console.log('Checking karaoke file:', karaokeFile, exists);
