@@ -38,11 +38,13 @@ export default function AdminHeader({ onLogout }: Props) {
     <header className="bg-white dark:bg-gray-800 shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex">
+          <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Admin Panel</h1>
+              <Link href="/admin" className="text-xl font-semibold text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300">
+                Admin Panel
+              </Link>
             </div>
-            <nav className="ml-6 flex space-x-4">
+            <nav className="ml-6 flex items-center space-x-4">
               <Link href="/admin" className="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white px-3 py-2 rounded-md text-sm">
                 Songs
               </Link>
