@@ -554,12 +554,15 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
 
     const mainAudio = mainAudioRef.current;
     const karaokeAudio = karaokeAudioRef.current;
+    
+    // Always initialize volumes first
+    mainAudio.volume = isKaraokeMode ? 0 : volume;
+    karaokeAudio.volume = isKaraokeMode ? volume : 0;
+
     const currentTime = mainAudio.currentTime;
     const wasPlaying = !mainAudio.paused;
 
-    // Prepare both audios
-    mainAudio.volume = isKaraokeMode ? 0 : volume;
-    karaokeAudio.volume = isKaraokeMode ? volume : 0;
+    // Sync timestamps
     mainAudio.currentTime = currentTime;
     karaokeAudio.currentTime = currentTime;
 
@@ -591,15 +594,32 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
     if (karaokeAudioRef.current) karaokeAudioRef.current.volume = volume;
   }, [volume]);
 
+  // Initialize audio elements with correct volume
+  useEffect(() => {
+    if (!mainAudioRef.current) return;
+    
+    const mainAudio = mainAudioRef.current;
+    const karaokeAudio = karaokeAudioRef.current;
+
+    // Set initial volumes
+    mainAudio.volume = isKaraokeMode ? 0 : volume;
+    if (karaokeAudio) {
+      karaokeAudio.volume = isKaraokeMode ? volume : 0;
+    }
+  }, [mainAudioRef.current, karaokeAudioRef.current]);
+
   const togglePlay = async () => {
     const mainAudio = mainAudioRef.current;
     const karaokeAudio = karaokeAudioRef.current;
     if (!mainAudio || (hasKaraoke && !karaokeAudio)) return;
 
-    const targetAudio = isKaraokeMode ? karaokeAudio! : mainAudio;
-
     if (!hasStartedPlaying) {
       setHasStartedPlaying(true);
+      // Set initial volumes
+      mainAudio.volume = isKaraokeMode ? 0 : volume;
+      if (karaokeAudio) {
+        karaokeAudio.volume = isKaraokeMode ? volume : 0;
+      }
     }
 
     if (isPlaying) {
@@ -609,6 +629,8 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
     } else {
       setIsLoading(true);
       try {
+        // Only play the active audio source
+        const targetAudio = isKaraokeMode ? karaokeAudio! : mainAudio;
         await targetAudio.play();
         setIsPlaying(true);
       } catch (err) {
