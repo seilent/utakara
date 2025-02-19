@@ -173,38 +173,28 @@ class DownloadQueue {
     const ytDlpPath = getYtDlpPath();
     const outputDir = join(process.cwd(), 'music');
     const binDir = join(process.cwd(), 'bin');
+    const finalOutput = `${outputDir}/${songId}.m4a`;
 
     return new Promise(async (resolve, reject) => {
-      try {
-        // Verify ffmpeg exists and is accessible
-        await fs.access(FFMPEG_PATH);
-      } catch (error) {
-        audioLogger.error(`Failed to access ffmpeg at ${FFMPEG_PATH}`, songId, error as Error);
-        reject(new Error(`FFmpeg not found at ${FFMPEG_PATH}`));
-        return;
-      }
-
       // Ensure output directory exists
       await fs.mkdir(outputDir, { recursive: true }).catch(() => {});
 
-      // First download the audio in best quality
-      const tempOutput = `${outputDir}/${songId}_temp.%(ext)s`;
+      // Download the audio directly in m4a format
       const downloadCommand = [
         `"${ytDlpPath}"`,
         '--no-check-certificate',
         '--verbose',
-        '-f bestaudio',
+        '-f bestaudio[ext=m4a]', // Prefer m4a format
         '--no-playlist',
         '-o',
-        `"${tempOutput}"`,
+        `"${finalOutput}"`,
         `"${youtubeUrl}"`
       ].join(' ');
 
       // Set up environment with proper PATH
       const env: NodeJS.ProcessEnv = {
         ...process.env,
-        PATH: `${binDir}${platform() === 'win32' ? ';' : ':'}${process.env.PATH}`,
-        FFMPEG_PATH: FFMPEG_PATH
+        PATH: `${binDir}${platform() === 'win32' ? ';' : ':'}${process.env.PATH}`
       };
 
       // Add Windows-specific env vars only on Windows
@@ -220,59 +210,14 @@ class DownloadQueue {
         }
 
         try {
-          // Find the downloaded file
-          const files = await fs.readdir(outputDir);
-          const downloadedFile = files.find(f => f.startsWith(`${songId}_temp.`));
-
-          if (!downloadedFile) {
-            reject(new Error('Downloaded file not found'));
-            return;
-          }
-
-          const downloadedPath = join(outputDir, downloadedFile);
-          const finalOutput = join(outputDir, `${songId}.m4a`);
-
-          // Convert to AAC using ffmpeg
-          const convertCommand = [
-            `"${FFMPEG_PATH}"`,
-            '-hide_banner',  // Reduce noise in logs
-            '-y', // Overwrite output file
-            `-i "${downloadedPath}"`, // Input file
-            '-vn', // No video
-            '-c:a aac', // Use AAC codec
-            '-b:a 192k', // Set bitrate (higher quality for AAC)
-            '-movflags faststart', // Optimize for streaming
-            `"${finalOutput}"` // Output file
-          ].join(' ');
-
-          exec(convertCommand, { env }, async (convertError: Error | null, convertStdout: string, convertStderr: string) => {
-            try {
-              if (convertError) {
-                audioLogger.error(`Conversion failed for song ${songId}`, songId, { error: convertError, stdout: convertStdout, stderr: convertStderr });
-                reject(convertError);
-                return;
-              }
-
-              // Verify the m4a file exists
-              await fs.access(finalOutput);
-
-              // Clean up temporary file
-              try {
-                await fs.unlink(downloadedPath);
-              } catch (cleanupError) {
-                audioLogger.warn(`Failed to clean up temp file for song ${songId}`, songId);
-              }
-
-              await clearDownloadStatus(songId);
-              await updateDownloadStatus(songId, { status: 'ready' });
-              resolve();
-            } catch (error) {
-              audioLogger.error(`Post-conversion error for song ${songId}`, songId, error as Error);
-              reject(error);
-            }
-          });
+          // Verify the file exists
+          await fs.access(finalOutput);
+          
+          await clearDownloadStatus(songId);
+          await updateDownloadStatus(songId, { status: 'ready' });
+          resolve();
         } catch (error) {
-          audioLogger.error(`Processing failed for song ${songId}`, songId, error as Error);
+          audioLogger.error(`Post-download error for song ${songId}`, songId, error as Error);
           reject(error);
         }
       });
