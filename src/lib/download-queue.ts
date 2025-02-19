@@ -230,19 +230,18 @@ class DownloadQueue {
           }
 
           const downloadedPath = join(outputDir, downloadedFile);
-          const finalOutput = join(outputDir, `${songId}.opus`);
+          const finalOutput = join(outputDir, `${songId}.m4a`);
 
-          // Convert to opus using ffmpeg
+          // Convert to AAC using ffmpeg
           const convertCommand = [
             `"${FFMPEG_PATH}"`,
             '-hide_banner',  // Reduce noise in logs
             '-y', // Overwrite output file
             `-i "${downloadedPath}"`, // Input file
             '-vn', // No video
-            '-c:a libopus', // Force opus codec
-            '-b:a 128k', // Set bitrate
-            '-application audio', // Optimize for audio
-            '-compression_level 10', // Maximum compression
+            '-c:a aac', // Use AAC codec
+            '-b:a 192k', // Set bitrate (higher quality for AAC)
+            '-movflags faststart', // Optimize for streaming
             `"${finalOutput}"` // Output file
           ].join(' ');
 
@@ -254,7 +253,7 @@ class DownloadQueue {
                 return;
               }
 
-              // Verify the opus file exists
+              // Verify the m4a file exists
               await fs.access(finalOutput);
 
               // Clean up temporary file
