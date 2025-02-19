@@ -587,17 +587,17 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
 
       // Calculate volume adjustment ratio with smoothing
       if (mainBassEnergy > 0 && karaokeBassEnergy > 0) {
-        const targetRatio = mainBassEnergy / karaokeBassEnergy;
+        const targetRatio = Math.min(mainBassEnergy / karaokeBassEnergy, 2); // Cap the ratio at 2x
         // Smooth the adjustment to avoid sudden volume changes
-        volumeAdjustmentRef.current = volumeAdjustmentRef.current * 0.95 + targetRatio * 0.05;
+        volumeAdjustmentRef.current = Math.min(1, volumeAdjustmentRef.current * 0.95 + targetRatio * 0.05);
       }
 
-      // Apply volume adjustment
+      // Apply volume adjustment with safety bounds
       if (mainAudioRef.current && karaokeAudioRef.current) {
-        const baseVolume = volume;
+        const baseVolume = Math.min(1, Math.max(0, volume)); // Ensure base volume is within [0, 1]
         if (isKaraokeMode) {
           mainAudioRef.current.volume = 0;
-          karaokeAudioRef.current.volume = baseVolume * volumeAdjustmentRef.current;
+          karaokeAudioRef.current.volume = Math.min(1, Math.max(0, baseVolume * volumeAdjustmentRef.current));
         } else {
           mainAudioRef.current.volume = baseVolume;
           karaokeAudioRef.current.volume = 0;
