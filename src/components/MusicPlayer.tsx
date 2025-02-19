@@ -557,6 +557,10 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
     const currentTime = mainAudio.currentTime;
     const wasPlaying = !mainAudio.paused;
 
+    // Explicitly reapply volume on both tracks
+    mainAudio.volume = volume;
+    karaokeAudio.volume = volume;
+
     // Use muted property instead of volume for switching
     mainAudio.muted = isKaraokeMode;
     karaokeAudio.muted = !isKaraokeMode;
@@ -583,7 +587,7 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
       mainAudio.pause();
       karaokeAudio.pause();
     }
-  }, [isKaraokeMode]);
+  }, [isKaraokeMode, volume]);
 
   // Handle volume changes
   useEffect(() => {

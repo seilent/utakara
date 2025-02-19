@@ -24,15 +24,12 @@ async function convertToAAC(inputPath: string, outputPath: string): Promise<void
     const baseConversion = ffmpeg(inputPath)
       .audioFrequency(44100)
       .audioChannels(2)
-      .audioBitrate('192k')
-      // Add loudness normalization filter
-      .audioFilters([
-        'loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json'  // Standard loudness normalization settings
-      ]);
+      .audioBitrate('192k');
 
-    // First attempt with libfdk_aac (better quality)
+    // First attempt with libfdk_aac (better quality) with streaming normalization preserving dynamics
     baseConversion.clone()
       .audioCodec('libfdk_aac')
+      .audioFilter('dynaudnorm')
       .toFormat('ipod')  // AAC container
       .addOutputOption('-profile:a', 'aac_low')  // High compatibility
       .addOutputOption('-q:a', '4')  // VBR quality setting for libfdk_aac
@@ -41,6 +38,7 @@ async function convertToAAC(inputPath: string, outputPath: string): Promise<void
           // Fallback to native AAC encoder with good settings
           baseConversion.clone()
             .audioCodec('aac')
+            .audioFilter('dynaudnorm')
             .toFormat('ipod')
             .addOutputOption('-strict', '-2')  // Allow experimental codecs
             .addOutputOption('-b:a', '192k')   // Constant bitrate as VBR isn't as good with native AAC
