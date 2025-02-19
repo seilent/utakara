@@ -559,7 +559,7 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
 
     // Explicitly reapply volume on both tracks
     mainAudio.volume = volume;
-    karaokeAudio.volume = volume;
+    karaokeAudio.volume = volume * 1.2;
 
     // Use muted property instead of volume for switching
     mainAudio.muted = isKaraokeMode;
@@ -593,7 +593,7 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
   useEffect(() => {
     // Apply volume to both tracks
     if (mainAudioRef.current) mainAudioRef.current.volume = volume;
-    if (karaokeAudioRef.current) karaokeAudioRef.current.volume = volume;
+    if (karaokeAudioRef.current) karaokeAudioRef.current.volume = volume * 1.2;
   }, [volume]);
 
   const togglePlay = async () => {
@@ -629,13 +629,16 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
     localStorage.setItem('audioVolume', newVolume.toString());
     // Apply volume to both tracks
     if (mainAudioRef.current) mainAudioRef.current.volume = newVolume;
-    if (karaokeAudioRef.current) karaokeAudioRef.current.volume = newVolume;
+    if (karaokeAudioRef.current) karaokeAudioRef.current.volume = newVolume * 1.2;
   };
 
   // Initialize volume from localStorage when audio element is created
   useEffect(() => {
     if (mainAudioRef.current) {
       mainAudioRef.current.volume = volume;
+    }
+    if (karaokeAudioRef.current) {
+      karaokeAudioRef.current.volume = volume * 1.2;
     }
   }, [volume]);
 

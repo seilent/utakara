@@ -19,38 +19,68 @@ function getDb() {
 }
 
 async function convertToAAC(inputPath: string, outputPath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    // Try with libfdk_aac first (better quality)
-    const baseConversion = ffmpeg(inputPath)
-      .audioFrequency(44100)
-      .audioChannels(2)
-      .audioBitrate('192k');
+  return new Promise(async (resolve, reject) => {
+    try {
+      // First pass: run volumedetect filter to measure max_volume
+      let stderrData = '';
+      // Use appropriate null device for Windows
+      const nullDevice = process.platform === 'win32' ? 'NUL' : '/dev/null';
 
-    // First attempt with libfdk_aac (better quality) with streaming normalization preserving dynamics
-    baseConversion.clone()
-      .audioCodec('libfdk_aac')
-      .audioFilter('dynaudnorm')
-      .toFormat('ipod')  // AAC container
-      .addOutputOption('-profile:a', 'aac_low')  // High compatibility
-      .addOutputOption('-q:a', '4')  // VBR quality setting for libfdk_aac
-      .on('error', (err) => {
-        if (err.message.includes('libfdk_aac')) {
-          // Fallback to native AAC encoder with good settings
-          baseConversion.clone()
-            .audioCodec('aac')
-            .audioFilter('dynaudnorm')
-            .toFormat('ipod')
-            .addOutputOption('-strict', '-2')  // Allow experimental codecs
-            .addOutputOption('-b:a', '192k')   // Constant bitrate as VBR isn't as good with native AAC
-            .on('error', reject)
-            .on('end', resolve)
-            .save(outputPath);
-        } else {
-          reject(err);
-        }
-      })
-      .on('end', resolve)
-      .save(outputPath);
+      await new Promise<void>((res, rej) => {
+        ffmpeg(inputPath)
+          .audioFilters('volumedetect')
+          .outputOptions('-f', 'null')
+          .output(nullDevice)
+          .on('stderr', (line: string) => {
+            stderrData += line;
+          })
+          .on('error', rej)
+          .on('end', res)
+          .run();
+      });
+
+      const match = stderrData.match(/max_volume:\s*(-?\d+(\.\d+)?) dB/);
+      if (!match) {
+        throw new Error('Could not detect max_volume');
+      }
+      const maxVolume = parseFloat(match[1]);
+      // Calculate gain adjustment to reach -1dB target
+      const gain = -1 - maxVolume;
+      const volumeFilter = `volume=${gain}dB`;
+
+      // Prepare base conversion settings including volume normalization
+      const baseConversion = ffmpeg(inputPath)
+        .audioFrequency(44100)
+        .audioChannels(2)
+        .audioBitrate('192k')
+        .audioFilters(volumeFilter);
+
+      // Attempt conversion using libfdk_aac first
+      baseConversion.clone()
+        .audioCodec('libfdk_aac')
+        .toFormat('ipod')
+        .addOutputOption('-profile:a', 'aac_low')
+        .addOutputOption('-q:a', '4')
+        .on('error', (err: Error) => {
+          if (err.message.includes('libfdk_aac')) {
+            // Fallback to native AAC encoder
+            baseConversion.clone()
+              .audioCodec('aac')
+              .toFormat('ipod')
+              .addOutputOption('-strict', '-2')
+              .addOutputOption('-b:a', '192k')
+              .on('error', reject)
+              .on('end', resolve)
+              .save(outputPath);
+          } else {
+            reject(err);
+          }
+        })
+        .on('end', resolve)
+        .save(outputPath);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
