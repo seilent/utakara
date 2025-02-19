@@ -557,9 +557,12 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
     const currentTime = mainAudio.currentTime;
     const wasPlaying = !mainAudio.paused;
 
-    // Explicitly reapply volume on both tracks
+    // Calculate boosted volume for karaoke, ensuring it doesn't exceed 1
+    const karaokeVolume = Math.min(volume * 1.3, 1);
+
+    // Explicitly reapply volume on both tracks with boost for karaoke
     mainAudio.volume = volume;
-    karaokeAudio.volume = volume * 1.4;
+    karaokeAudio.volume = isKaraokeMode ? karaokeVolume : volume;
 
     // Use muted property instead of volume for switching
     mainAudio.muted = isKaraokeMode;
@@ -591,10 +594,13 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
 
   // Handle volume changes
   useEffect(() => {
+    // Calculate boosted volume for karaoke, ensuring it doesn't exceed 1
+    const karaokeVolume = Math.min(volume * 1.3, 1);
+    
     // Apply volume to both tracks
     if (mainAudioRef.current) mainAudioRef.current.volume = volume;
-    if (karaokeAudioRef.current) karaokeAudioRef.current.volume = volume * 1.4;
-  }, [volume]);
+    if (karaokeAudioRef.current) karaokeAudioRef.current.volume = isKaraokeMode ? karaokeVolume : volume;
+  }, [volume, isKaraokeMode]);
 
   const togglePlay = async () => {
     const mainAudio = mainAudioRef.current;
@@ -629,7 +635,7 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
     localStorage.setItem('audioVolume', newVolume.toString());
     // Apply volume to both tracks
     if (mainAudioRef.current) mainAudioRef.current.volume = newVolume;
-    if (karaokeAudioRef.current) karaokeAudioRef.current.volume = newVolume * 1.4;
+    if (karaokeAudioRef.current) karaokeAudioRef.current.volume = newVolume;
   };
 
   // Initialize volume from localStorage when audio element is created
@@ -638,7 +644,7 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
       mainAudioRef.current.volume = volume;
     }
     if (karaokeAudioRef.current) {
-      karaokeAudioRef.current.volume = volume * 1.4;
+      karaokeAudioRef.current.volume = volume;
     }
   }, [volume]);
 
