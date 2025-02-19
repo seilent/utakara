@@ -180,6 +180,8 @@ interface BottomBarPlayerProps extends Omit<MusicPlayerProps, 'hasAudio'> {
   volume: number;
   onVolumeChange: (value: number) => void;
   onSeek: (value: number) => void;
+  karaokeUrl: string;
+  isKaraokeMode: boolean;
 }
 
 const BottomBarPlayer = ({ 
@@ -698,11 +700,14 @@ const MusicPlayer = ({ audioUrl, karaokeUrl, isKaraokeMode, songId, artwork, col
       {hasStartedPlaying && (
         <BottomBarPlayer
           audioUrl={audioUrl}
+          karaokeUrl={karaokeUrl}
+          isKaraokeMode={isKaraokeMode}
           songId={songId}
           artwork={artwork}
           colors={colors}
           title={title}
           artist={artist}
+          hasKaraoke={hasKaraoke}
           isPlaying={isPlaying}
           currentTime={currentTime}
           duration={duration}
